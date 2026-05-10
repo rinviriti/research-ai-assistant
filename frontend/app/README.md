@@ -1,16 +1,55 @@
-# app
+# Research AI Assistant 🚀
 
-A new Flutter project.
+An AI-powered research assistant application designed for students and researchers to:
 
-## Getting Started
+- Summarize research papers
+- Organize study notes
+- Track experiments
+- Generate project documentation
+- Manage AI/research workflows efficiently
 
-This project is a starting point for a Flutter application.
+## Tech Stack
 
-A few resources to get you started if this is your first Flutter project:
+### Frontend
+- Flutter
+- Dart
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Backend
+- Python
+- FastAPI
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### AI Integration
+- NLP
+- Research summarization
+- Document analysis
+
+---
+
+## Project Goals
+
+- Build a modern AI-powered productivity platform
+- Help students manage research efficiently
+- Create a scalable cross-platform application
+- Practice production-level software engineering
+
+---
+
+## Current Progress
+
+- [x] GitHub repository setup
+- [x] Flutter frontend initialized
+- [x] Basic application architecture
+- [ ] Authentication system
+- [ ] Research paper upload
+- [ ] AI summarization
+- [ ] Cloud database integration
+- [ ] Deployment
+
+---
+
+## Developer
+
+Rinvi Jaman Riti
+
+- GitHub: https://github.com/rinviriti
+- LinkedIn: https://www.linkedin.com/in/rinvi-jaman
