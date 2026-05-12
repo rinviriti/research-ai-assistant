@@ -52,4 +52,4 @@ An AI-powered research assistant application designed for students and researche
 Rinvi Jaman Riti
 
 - GitHub: https://github.com/rinviriti
-- LinkedIn: https://www.linkedin.com/in/rinvi-jaman# Research AI Assistant 🚀
+- LinkedIn: https://www.linkedin.com/in/rinvi-jaman
