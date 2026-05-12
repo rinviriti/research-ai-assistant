@@ -40,7 +40,7 @@ An AI-powered research assistant application designed for students and researche
 - [x] Flutter frontend initialized
 - [x] Basic application architecture
 - [x] Authentication system
-- [ ] Research paper upload
+- [x] Research paper upload
 - [ ] AI summarization
 - [ ] Cloud database integration
 - [ ] Deployment
