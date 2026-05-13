@@ -3,6 +3,7 @@ import '../../../widgets/custom_button.dart';
 import '../../../widgets/custom_textfield.dart';
 import '../../home/screens/home_screen.dart';
 import 'signup_screen.dart';
+import '../../../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -44,6 +45,15 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         errorMessage =
             "Password must be 8+ characters with uppercase, lowercase, number, and special character.";
+      });
+      return;
+    }
+
+    final isAuthenticated = AuthService.loginUser(email, password);
+
+    if (!isAuthenticated) {
+      setState(() {
+        errorMessage = "Invalid email or password. Please sign up first.";
       });
       return;
     }
