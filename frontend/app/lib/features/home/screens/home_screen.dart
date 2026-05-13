@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../services/auth_service.dart';
+import '../../auth/screens/login_screen.dart';
 import '../../paper/screens/upload_paper_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -24,8 +26,22 @@ class HomeScreen extends StatelessWidget {
 
       appBar: AppBar(
         backgroundColor: const Color(0xFF1E293B),
-        elevation: 0,
         title: const Text("Dashboard"),
+
+        actions: [
+          IconButton(
+            onPressed: () {
+              AuthService.logout();
+
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+            icon: const Icon(Icons.logout),
+          ),
+        ],
       ),
 
       body: Padding(
@@ -44,11 +60,11 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
-            const Text(
-              "Manage your research workflow smarter.",
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+            Text(
+              AuthService.currentUser ?? "Unknown User",
+              style: const TextStyle(color: Colors.blueAccent, fontSize: 16),
             ),
 
             const SizedBox(height: 28),
@@ -87,7 +103,6 @@ class HomeScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFF1E293B),
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: Colors.white10),
                       ),
 
                       child: Column(

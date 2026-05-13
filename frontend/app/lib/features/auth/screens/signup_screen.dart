@@ -12,6 +12,7 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
+  final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
@@ -31,9 +32,17 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void signup() {
+    final name = nameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
     final confirmPassword = confirmPasswordController.text.trim();
+
+    if (name.isEmpty) {
+      setState(() {
+        errorMessage = "Please enter your full name.";
+      });
+      return;
+    }
 
     if (!isValidEmail(email)) {
       setState(() {
@@ -57,7 +66,7 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
-    AuthService.registerUser(email, password);
+    AuthService.registerUser(name, email, password);
 
     setState(() {
       errorMessage = null;
@@ -75,6 +84,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   void dispose() {
+    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
@@ -118,30 +128,42 @@ class _SignupScreenState extends State<SignupScreen> {
                     style: TextStyle(color: Colors.white70),
                   ),
                   const SizedBox(height: 40),
+
+                  CustomTextField(
+                    hintText: "Full Name",
+                    controller: nameController,
+                  ),
+                  const SizedBox(height: 18),
+
                   CustomTextField(
                     hintText: "Email",
                     controller: emailController,
                   ),
                   const SizedBox(height: 18),
+
                   CustomTextField(
                     hintText: "Password",
                     obscureText: true,
                     controller: passwordController,
                   ),
                   const SizedBox(height: 18),
+
                   CustomTextField(
                     hintText: "Confirm Password",
                     obscureText: true,
                     controller: confirmPasswordController,
                   ),
                   const SizedBox(height: 16),
+
                   if (errorMessage != null)
                     Text(
                       errorMessage!,
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Colors.redAccent),
                     ),
+
                   const SizedBox(height: 28),
+
                   CustomButton(text: "Create Account", onPressed: signup),
                 ],
               ),
