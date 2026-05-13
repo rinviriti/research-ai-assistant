@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import '../../../widgets/custom_button.dart';
 import '../../../widgets/custom_textfield.dart';
-import '../../home/screens/home_screen.dart';
-import 'signup_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignupScreenState extends State<SignupScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
   String? errorMessage;
 
@@ -29,13 +28,14 @@ class _LoginScreenState extends State<LoginScreen> {
     return passwordRegex.hasMatch(password);
   }
 
-  void login() {
+  void signup() {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
+    final confirmPassword = confirmPasswordController.text.trim();
 
     if (!isValidEmail(email)) {
       setState(() {
-        errorMessage = "Please enter a valid email address.";
+        errorMessage = "Please enter a valid email.";
       });
       return;
     }
@@ -43,7 +43,14 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!isValidPassword(password)) {
       setState(() {
         errorMessage =
-            "Password must be 8+ characters with uppercase, lowercase, number, and special character.";
+            "Password must contain uppercase, lowercase, number and special character.";
+      });
+      return;
+    }
+
+    if (password != confirmPassword) {
+      setState(() {
+        errorMessage = "Passwords do not match.";
       });
       return;
     }
@@ -52,16 +59,16 @@ class _LoginScreenState extends State<LoginScreen> {
       errorMessage = null;
     });
 
-    Navigator.push(
+    ScaffoldMessenger.of(
       context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-    );
+    ).showSnackBar(const SnackBar(content: Text("Signup successful 🚀")));
   }
 
   @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
+    confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -69,17 +76,24 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
+
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1E293B),
+        title: const Text("Create Account"),
+      ),
+
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
+
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
+
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
-                    Icons.auto_awesome,
+                    Icons.person_add_alt_1,
                     color: Colors.blueAccent,
                     size: 70,
                   ),
@@ -87,8 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 24),
 
                   const Text(
-                    "Research AI Assistant",
-                    textAlign: TextAlign.center,
+                    "Create Account",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 32,
@@ -99,9 +112,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 10),
 
                   const Text(
-                    "Organize papers, notes, and experiments smarter.",
+                    "Start managing your research smarter.",
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                    style: TextStyle(color: Colors.white70),
                   ),
 
                   const SizedBox(height: 40),
@@ -119,38 +132,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: passwordController,
                   ),
 
+                  const SizedBox(height: 18),
+
+                  CustomTextField(
+                    hintText: "Confirm Password",
+                    obscureText: true,
+                    controller: confirmPasswordController,
+                  ),
+
                   const SizedBox(height: 16),
 
                   if (errorMessage != null)
                     Text(
                       errorMessage!,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.redAccent,
-                        fontSize: 14,
-                      ),
+                      style: const TextStyle(color: Colors.redAccent),
                     ),
 
                   const SizedBox(height: 28),
 
-                  CustomButton(text: "Login", onPressed: login),
-
-                  const SizedBox(height: 20),
-
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SignupScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Create a new account",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ),
+                  CustomButton(text: "Create Account", onPressed: signup),
                 ],
               ),
             ),
