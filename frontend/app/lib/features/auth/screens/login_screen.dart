@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../services/auth_service.dart';
 import '../../../widgets/custom_button.dart';
 import '../../../widgets/custom_textfield.dart';
-import '../../home/screens/home_screen.dart';
+import '../../navigation/main_navigation_screen.dart';
 import 'signup_screen.dart';
-import '../../../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -62,9 +62,9 @@ class _LoginScreenState extends State<LoginScreen> {
       errorMessage = null;
     });
 
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
     );
   }
 
@@ -93,9 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: Colors.blueAccent,
                     size: 70,
                   ),
-
                   const SizedBox(height: 24),
-
                   const Text(
                     "Research AI Assistant",
                     textAlign: TextAlign.center,
@@ -105,22 +103,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   const Text(
                     "Organize papers, notes, and experiments smarter.",
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
-
                   const SizedBox(height: 40),
 
                   CustomTextField(
                     hintText: "Email",
                     controller: emailController,
                   ),
-
                   const SizedBox(height: 18),
 
                   CustomTextField(
@@ -128,7 +122,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: true,
                     controller: passwordController,
                   ),
-
                   const SizedBox(height: 16),
 
                   if (errorMessage != null)
