@@ -6,4 +6,12 @@ class SummaryService {
   static void saveSummary(SummaryModel summary) {
     savedSummaries.add(summary);
   }
+
+  static void deleteSummary(int index) {
+    savedSummaries.removeAt(index);
+  }
+
+  static void clearAllSummaries() {
+    savedSummaries.clear();
+  }
 }
