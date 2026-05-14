@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../services/auth_service.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../paper/screens/upload_paper_screen.dart';
+import '../../summary/screens/summary_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -19,6 +20,34 @@ class HomeScreen extends StatelessWidget {
     },
   ];
 
+  Future<void> logout(BuildContext context) async {
+    await AuthService.logout();
+
+    if (!context.mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
+  void openFeature(BuildContext context, String title) {
+    if (title == "Upload Paper") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const UploadPaperScreen()),
+      );
+    }
+
+    if (title == "AI Summary") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const SummaryScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,19 +55,12 @@ class HomeScreen extends StatelessWidget {
 
       appBar: AppBar(
         backgroundColor: const Color(0xFF1E293B),
+
         title: const Text("Dashboard"),
 
         actions: [
           IconButton(
-            onPressed: () {
-              AuthService.logout();
-
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-                (route) => false,
-              );
-            },
+            onPressed: () => logout(context),
             icon: const Icon(Icons.logout),
           ),
         ],
@@ -53,6 +75,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             const Text(
               "Welcome back 👋",
+
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 30,
@@ -64,6 +87,7 @@ class HomeScreen extends StatelessWidget {
 
             Text(
               AuthService.currentUser ?? "Unknown User",
+
               style: const TextStyle(color: Colors.blueAccent, fontSize: 16),
             ),
 
@@ -86,22 +110,14 @@ class HomeScreen extends StatelessWidget {
                   return InkWell(
                     borderRadius: BorderRadius.circular(18),
 
-                    onTap: () {
-                      if (feature["title"] == "Upload Paper") {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const UploadPaperScreen(),
-                          ),
-                        );
-                      }
-                    },
+                    onTap: () => openFeature(context, feature["title"]!),
 
                     child: Container(
                       padding: const EdgeInsets.all(18),
 
                       decoration: BoxDecoration(
                         color: const Color(0xFF1E293B),
+
                         borderRadius: BorderRadius.circular(18),
                       ),
 
@@ -119,6 +135,7 @@ class HomeScreen extends StatelessWidget {
 
                           Text(
                             feature["title"]!,
+
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
@@ -130,6 +147,7 @@ class HomeScreen extends StatelessWidget {
 
                           Text(
                             feature["subtitle"]!,
+
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 13,
