@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,7 +18,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final nameController = TextEditingController();
   final bioController = TextEditingController();
 
-  String? imagePath;
+  Uint8List? profileImageBytes;
 
   @override
   void initState() {
@@ -29,9 +30,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
 
+    final savedImage = prefs.getString("profile_image_base64");
+
     setState(() {
-      imagePath = prefs.getString("profile_image");
       bioController.text = prefs.getString("profile_bio") ?? "";
+
+      if (savedImage != null && savedImage.isNotEmpty) {
+        profileImageBytes = base64Decode(savedImage);
+      }
     });
   }
 
@@ -40,17 +46,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final pickedImage = await picker.pickImage(
       source: ImageSource.gallery,
-      imageQuality: 75,
+      imageQuality: 70,
     );
 
     if (pickedImage == null) return;
 
+    final bytes = await pickedImage.readAsBytes();
+
     final prefs = await SharedPreferences.getInstance();
 
-    await prefs.setString("profile_image", pickedImage.path);
+    await prefs.setString("profile_image_base64", base64Encode(bytes));
 
     setState(() {
-      imagePath = pickedImage.path;
+      profileImageBytes = bytes;
     });
   }
 
@@ -62,8 +70,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Profile updated successfully 🚀")),
     );
-
-    setState(() {});
   }
 
   @override
@@ -73,18 +79,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
-  ImageProvider? getProfileImage() {
-    if (imagePath == null || imagePath!.isEmpty) {
-      return null;
-    }
-
-    return FileImage(File(imagePath!));
-  }
-
   @override
   Widget build(BuildContext context) {
-    final profileImage = getProfileImage();
-
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
@@ -103,11 +99,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 CircleAvatar(
                   radius: 58,
                   backgroundColor: Colors.blueAccent,
-                  backgroundImage: profileImage,
-                  child: profileImage == null
+                  backgroundImage: profileImageBytes != null
+                      ? MemoryImage(profileImageBytes!)
+                      : null,
+                  child: profileImageBytes == null
                       ? const Icon(Icons.person, size: 58, color: Colors.white)
                       : null,
                 ),
+
                 InkWell(
                   onTap: pickProfileImage,
                   child: Container(

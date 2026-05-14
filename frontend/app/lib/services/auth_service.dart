@@ -13,6 +13,9 @@ class AuthService {
     await prefs.setString('name', name);
     await prefs.setString('email', email);
     await prefs.setString('password', password);
+    await prefs.setBool('loggedIn', true);
+
+    currentUser = name;
   }
 
   static Future<bool> loginUser(String email, String password) async {
@@ -26,7 +29,6 @@ class AuthService {
 
     if (isValid) {
       currentUser = storedName;
-
       await prefs.setBool('loggedIn', true);
     }
 
@@ -37,17 +39,15 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
 
     final loggedIn = prefs.getBool('loggedIn') ?? false;
-
     currentUser = prefs.getString('name');
 
-    return loggedIn;
+    return loggedIn && currentUser != null;
   }
 
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setBool('loggedIn', false);
-
     currentUser = null;
   }
 }
