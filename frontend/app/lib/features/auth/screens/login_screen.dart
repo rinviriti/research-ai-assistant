@@ -17,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
 
   String? errorMessage;
+  bool isLoading = false;
 
   bool isValidEmail(String email) {
     return email.contains("@") && email.contains(".");
@@ -26,11 +27,10 @@ class _LoginScreenState extends State<LoginScreen> {
     final passwordRegex = RegExp(
       r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_-])[A-Za-z\d@$!%*?&.#_-]{8,}$',
     );
-
     return passwordRegex.hasMatch(password);
   }
 
-  void login() {
+  Future<void> login() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
@@ -49,7 +49,18 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    final isAuthenticated = AuthService.loginUser(email, password);
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    final isAuthenticated = await AuthService.loginUser(email, password);
+
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = false;
+    });
 
     if (!isAuthenticated) {
       setState(() {
@@ -57,10 +68,6 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       return;
     }
-
-    setState(() {
-      errorMessage = null;
-    });
 
     Navigator.pushReplacement(
       context,
@@ -136,7 +143,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 28),
 
-                  CustomButton(text: "Login", onPressed: login),
+                  isLoading
+                      ? const CircularProgressIndicator()
+                      : CustomButton(text: "Login", onPressed: login),
 
                   const SizedBox(height: 20),
 

@@ -18,6 +18,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final confirmPasswordController = TextEditingController();
 
   String? errorMessage;
+  bool isLoading = false;
 
   bool isValidEmail(String email) {
     return email.contains("@") && email.contains(".");
@@ -27,11 +28,10 @@ class _SignupScreenState extends State<SignupScreen> {
     final passwordRegex = RegExp(
       r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_-])[A-Za-z\d@$!%*?&.#_-]{8,}$',
     );
-
     return passwordRegex.hasMatch(password);
   }
 
-  void signup() {
+  Future<void> signup() async {
     final name = nameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -66,14 +66,23 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
-    AuthService.registerUser(name, email, password);
-
     setState(() {
+      isLoading = true;
       errorMessage = null;
     });
 
+    await AuthService.registerUser(name, email, password);
+
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = false;
+    });
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Account created successfully 🚀")),
+      const SnackBar(
+        content: Text("Account created successfully. Please login."),
+      ),
     );
 
     Navigator.pushReplacement(
@@ -164,7 +173,9 @@ class _SignupScreenState extends State<SignupScreen> {
 
                   const SizedBox(height: 28),
 
-                  CustomButton(text: "Create Account", onPressed: signup),
+                  isLoading
+                      ? const CircularProgressIndicator()
+                      : CustomButton(text: "Create Account", onPressed: signup),
                 ],
               ),
             ),

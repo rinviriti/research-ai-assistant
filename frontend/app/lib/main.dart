@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'features/auth/screens/login_screen.dart';
+import 'features/splash/screens/splash_screen.dart';
 
 void main() {
   runApp(const ResearchAIApp());
@@ -14,7 +14,7 @@ class ResearchAIApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Research AI Assistant',
       theme: ThemeData.dark(),
-      home: const LoginScreen(),
+      home: const SplashScreen(),
     );
   }
 }
