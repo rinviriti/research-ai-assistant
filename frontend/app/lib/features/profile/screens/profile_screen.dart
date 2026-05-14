@@ -1,4 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -10,17 +15,50 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final nameController = TextEditingController();
-
   final bioController = TextEditingController();
+
+  String? imagePath;
 
   @override
   void initState() {
     super.initState();
-
     nameController.text = AuthService.currentUser ?? "Unknown User";
+    loadProfileData();
   }
 
-  void saveProfile() {
+  Future<void> loadProfileData() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      imagePath = prefs.getString("profile_image");
+      bioController.text = prefs.getString("profile_bio") ?? "";
+    });
+  }
+
+  Future<void> pickProfileImage() async {
+    final picker = ImagePicker();
+
+    final pickedImage = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 75,
+    );
+
+    if (pickedImage == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString("profile_image", pickedImage.path);
+
+    setState(() {
+      imagePath = pickedImage.path;
+    });
+  }
+
+  Future<void> saveProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setString("profile_bio", bioController.text.trim());
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Profile updated successfully 🚀")),
     );
@@ -35,45 +73,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.dispose();
   }
 
+  ImageProvider? getProfileImage() {
+    if (imagePath == null || imagePath!.isEmpty) {
+      return null;
+    }
+
+    return FileImage(File(imagePath!));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final profileImage = getProfileImage();
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
-
       appBar: AppBar(
         title: const Text("Profile"),
         backgroundColor: const Color(0xFF1E293B),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-
         child: Column(
           children: [
             const SizedBox(height: 20),
 
-            const CircleAvatar(
-              radius: 55,
-              backgroundColor: Colors.blueAccent,
-
-              child: Icon(Icons.person, size: 55, color: Colors.white),
+            Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                CircleAvatar(
+                  radius: 58,
+                  backgroundColor: Colors.blueAccent,
+                  backgroundImage: profileImage,
+                  child: profileImage == null
+                      ? const Icon(Icons.person, size: 58, color: Colors.white)
+                      : null,
+                ),
+                InkWell(
+                  onTap: pickProfileImage,
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: const BoxDecoration(
+                      color: Colors.blueAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 24),
 
             TextField(
               controller: nameController,
-
+              readOnly: true,
               style: const TextStyle(color: Colors.white),
-
               decoration: InputDecoration(
                 labelText: "Full Name",
-
                 labelStyle: const TextStyle(color: Colors.white70),
-
                 filled: true,
                 fillColor: Colors.white10,
-
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -85,17 +148,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             TextField(
               controller: bioController,
               maxLines: 4,
-
               style: const TextStyle(color: Colors.white),
-
               decoration: InputDecoration(
                 labelText: "Bio",
-
                 labelStyle: const TextStyle(color: Colors.white70),
-
                 filled: true,
                 fillColor: Colors.white10,
-
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -107,10 +165,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(
               width: double.infinity,
               height: 55,
-
               child: ElevatedButton(
                 onPressed: saveProfile,
-
                 child: const Text(
                   "Save Profile",
                   style: TextStyle(fontSize: 18),
@@ -123,40 +179,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
-
               decoration: BoxDecoration(
                 color: const Color(0xFF1E293B),
-
                 borderRadius: BorderRadius.circular(18),
               ),
-
-              child: Column(
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-
                 children: [
-                  const Text(
+                  Text(
                     "Account Information",
-
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-
-                  const SizedBox(height: 18),
-
+                  SizedBox(height: 18),
                   Text(
-                    "Logged in as: ${AuthService.currentUser}",
-
-                    style: const TextStyle(color: Colors.white70),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  const Text(
-                    "Research AI Premium User",
-
+                    "Research AI User",
                     style: TextStyle(color: Colors.blueAccent),
                   ),
                 ],
