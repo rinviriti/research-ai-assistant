@@ -3,6 +3,8 @@ import '../../../services/auth_service.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../paper/screens/upload_paper_screen.dart';
 import '../../summary/screens/summary_screen.dart';
+import '../../experiment/screens/experiment_tracker_screen.dart';
+import '../../docs/screens/project_docs_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -44,6 +46,22 @@ class HomeScreen extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const SummaryScreen()),
+      );
+    }
+
+    if (title == "Experiment Tracker") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ExperimentTrackerScreen(),
+        ),
+      );
+    }
+
+    if (title == "Project Docs") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ProjectDocsScreen()),
       );
     }
   }
