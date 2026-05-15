@@ -14,6 +14,18 @@ class SummaryDetailScreen extends StatefulWidget {
 }
 
 class _SummaryDetailScreenState extends State<SummaryDetailScreen> {
+  late TextEditingController titleController;
+  late TextEditingController summaryController;
+
+  bool isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    titleController = TextEditingController(text: widget.summary.title);
+    summaryController = TextEditingController(text: widget.summary.summary);
+  }
+
   Future<void> toggleFavorite() async {
     setState(() {
       widget.summary.isFavorite = !widget.summary.isFavorite;
@@ -22,16 +34,50 @@ class _SummaryDetailScreenState extends State<SummaryDetailScreen> {
     await SummaryService.saveToStorage();
   }
 
+  Future<void> saveEditedSummary() async {
+    final title = titleController.text.trim();
+    final summaryText = summaryController.text.trim();
+
+    if (title.isEmpty || summaryText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Title and summary cannot be empty.")),
+      );
+      return;
+    }
+
+    final index = SummaryService.savedSummaries.indexOf(widget.summary);
+
+    if (index != -1) {
+      SummaryService.savedSummaries[index] = SummaryModel(
+        title: title,
+        summary: summaryText,
+        isFavorite: widget.summary.isFavorite,
+      );
+
+      await SummaryService.saveToStorage();
+    }
+
+    if (!mounted) return;
+
+    setState(() {
+      isEditing = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Summary updated successfully.")),
+    );
+  }
+
   void copySummary() {
     Clipboard.setData(
       ClipboardData(
         text:
             """
 Title:
-${widget.summary.title}
+${titleController.text}
 
 Summary:
-${widget.summary.summary}
+${summaryController.text}
 """,
       ),
     );
@@ -42,7 +88,17 @@ ${widget.summary.summary}
   }
 
   @override
+  void dispose() {
+    titleController.dispose();
+    summaryController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final displayTitle = titleController.text;
+    final displaySummary = summaryController.text;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
@@ -57,6 +113,14 @@ ${widget.summary.summary}
             ),
           ),
           IconButton(onPressed: copySummary, icon: const Icon(Icons.copy)),
+          IconButton(
+            onPressed: () {
+              setState(() {
+                isEditing = !isEditing;
+              });
+            },
+            icon: Icon(isEditing ? Icons.close : Icons.edit),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -68,28 +132,60 @@ ${widget.summary.summary}
             color: const Color(0xFF1E293B),
             borderRadius: BorderRadius.circular(18),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.summary.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+          child: isEditing
+              ? Column(
+                  children: [
+                    TextField(
+                      controller: titleController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: "Title",
+                        labelStyle: TextStyle(color: Colors.white70),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: summaryController,
+                      maxLines: 10,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        labelText: "Summary",
+                        labelStyle: TextStyle(color: Colors.white70),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: saveEditedSummary,
+                        child: const Text("Save Changes"),
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      displaySummary,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.7,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                widget.summary.summary,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  height: 1.7,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
