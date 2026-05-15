@@ -13,22 +13,16 @@ class ExperimentTrackerScreen extends StatefulWidget {
 
 class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
   final experimentNameController = TextEditingController();
-
   final modelNameController = TextEditingController();
-
   final resultController = TextEditingController();
-
   final notesController = TextEditingController();
 
   int? editingIndex;
 
   Future<void> saveExperiment() async {
     final experimentName = experimentNameController.text.trim();
-
     final modelName = modelNameController.text.trim();
-
     final result = resultController.text.trim();
-
     final notes = notesController.text.trim();
 
     if (experimentName.isEmpty || modelName.isEmpty || result.isEmpty) {
@@ -37,7 +31,6 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
           content: Text("Please enter experiment name, model, and result."),
         ),
       );
-
       return;
     }
 
@@ -59,7 +52,6 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
       );
 
       await ExperimentService.saveToStorage();
-
       editingIndex = null;
     }
 
@@ -76,21 +68,61 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
 
     setState(() {
       editingIndex = index;
-
       experimentNameController.text = experiment.experimentName;
-
       modelNameController.text = experiment.modelName;
-
       resultController.text = experiment.result;
-
       notesController.text = experiment.notes;
     });
   }
 
   Future<void> deleteExperiment(int index) async {
     await ExperimentService.deleteExperiment(index);
-
     setState(() {});
+  }
+
+  Widget emptyState() {
+    return const Padding(
+      padding: EdgeInsets.only(top: 40),
+      child: Column(
+        children: [
+          Icon(Icons.science_outlined, color: Colors.greenAccent, size: 80),
+          SizedBox(height: 18),
+          Text(
+            "No experiments yet",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            "Track your model tests, accuracy, results, and research experiment notes here.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70, height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildTextField({
+    required String label,
+    required TextEditingController controller,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: const Color(0xFF1E293B),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
   }
 
   @override
@@ -102,89 +134,50 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
     super.dispose();
   }
 
-  Widget buildTextField({
-    required String label,
-    required TextEditingController controller,
-    int maxLines = 1,
-  }) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-
-      style: const TextStyle(color: Colors.white),
-
-      decoration: InputDecoration(
-        labelText: label,
-
-        labelStyle: const TextStyle(color: Colors.white70),
-
-        filled: true,
-        fillColor: const Color(0xFF1E293B),
-
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final experiments = ExperimentService.experiments;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
-
       appBar: AppBar(
         title: const Text("Experiment Tracker"),
-
         backgroundColor: const Color(0xFF1E293B),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-
         child: Column(
           children: [
             buildTextField(
               label: "Experiment Name",
-
               controller: experimentNameController,
             ),
-
             const SizedBox(height: 16),
 
             buildTextField(
               label: "Model Name",
-
               controller: modelNameController,
             ),
-
             const SizedBox(height: 16),
 
             buildTextField(
               label: "Result / Accuracy",
-
               controller: resultController,
             ),
-
             const SizedBox(height: 16),
 
             buildTextField(
               label: "Notes",
-
               controller: notesController,
-
               maxLines: 4,
             ),
-
             const SizedBox(height: 24),
 
             SizedBox(
               width: double.infinity,
               height: 55,
-
               child: ElevatedButton(
                 onPressed: saveExperiment,
-
                 child: Text(
                   editingIndex == null ? "Add Experiment" : "Update Experiment",
                 ),
@@ -194,99 +187,68 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
             const SizedBox(height: 30),
 
             experiments.isEmpty
-                ? const Text(
-                    "No experiments added yet.",
-
-                    style: TextStyle(color: Colors.white70),
-                  )
+                ? emptyState()
                 : ListView.builder(
                     shrinkWrap: true,
-
                     physics: const NeverScrollableScrollPhysics(),
-
                     itemCount: experiments.length,
-
                     itemBuilder: (context, index) {
                       final experiment = experiments[index];
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 16),
-
                         padding: const EdgeInsets.all(18),
-
                         decoration: BoxDecoration(
                           color: const Color(0xFF1E293B),
-
                           borderRadius: BorderRadius.circular(18),
                         ),
-
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-
                           children: [
                             Row(
                               children: [
                                 Expanded(
                                   child: Text(
                                     experiment.experimentName,
-
                                     style: const TextStyle(
                                       color: Colors.white,
-
                                       fontSize: 18,
-
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
-
                                 IconButton(
                                   onPressed: () => startEdit(index),
-
                                   icon: const Icon(
                                     Icons.edit,
-
                                     color: Colors.blueAccent,
                                   ),
                                 ),
-
                                 IconButton(
                                   onPressed: () => deleteExperiment(index),
-
                                   icon: const Icon(
                                     Icons.delete,
-
                                     color: Colors.redAccent,
                                   ),
                                 ),
                               ],
                             ),
-
                             const SizedBox(height: 10),
-
                             Text(
                               "Model: ${experiment.modelName}",
-
                               style: const TextStyle(color: Colors.white70),
                             ),
-
                             const SizedBox(height: 6),
-
                             Text(
                               "Result: ${experiment.result}",
-
                               style: const TextStyle(color: Colors.blueAccent),
                             ),
-
                             if (experiment.notes.isNotEmpty) ...[
                               const SizedBox(height: 10),
-
                               Text(
                                 experiment.notes,
-
                                 style: const TextStyle(
                                   color: Colors.white70,
-
                                   height: 1.5,
                                 ),
                               ),
