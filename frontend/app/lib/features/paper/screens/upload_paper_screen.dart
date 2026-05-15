@@ -4,6 +4,9 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
+import '../../../models/summary_model.dart';
+import '../../../services/summary_service.dart';
+
 class UploadPaperScreen extends StatefulWidget {
   const UploadPaperScreen({super.key});
 
@@ -28,7 +31,7 @@ class _UploadPaperScreenState extends State<UploadPaperScreen> {
 
     final FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf'],
+      allowedExtensions: ["pdf"],
       withData: true,
     );
 
@@ -36,46 +39,40 @@ class _UploadPaperScreenState extends State<UploadPaperScreen> {
       setState(() {
         isLoading = false;
       });
-
       return;
     }
 
     final PlatformFile file = result.files.first;
-
     final Uint8List? bytes = file.bytes;
 
     if (bytes == null) {
       setState(() {
+        fileName = file.name;
+        extractedText = "Could not read PDF file data.";
         isLoading = false;
       });
-
       return;
     }
 
     try {
       final PdfDocument document = PdfDocument(inputBytes: bytes);
-
       final PdfTextExtractor extractor = PdfTextExtractor(document);
 
       final String text = extractor.extractText();
 
       document.dispose();
 
-      final String summary = generateAISummary(text);
-
       setState(() {
         fileName = file.name;
-
-        extractedText = text;
-
-        aiSummary = summary;
-
+        extractedText = text.isEmpty ? "No readable text found." : text;
+        aiSummary = generateAISummary(text);
         isLoading = false;
       });
     } catch (e) {
       setState(() {
+        fileName = file.name;
         extractedText = "Failed to extract PDF text.";
-
+        aiSummary = "";
         isLoading = false;
       });
     }
@@ -83,23 +80,36 @@ class _UploadPaperScreenState extends State<UploadPaperScreen> {
 
   String generateAISummary(String text) {
     if (text.isEmpty) {
-      return "No readable text found.";
+      return "No readable text found in this PDF.";
     }
 
-    final shortened = text.length > 1200 ? text.substring(0, 1200) : text;
+    final preview = text.length > 900 ? text.substring(0, 900) : text;
 
     return """
-This research paper discusses advanced concepts related to artificial intelligence, machine learning, and research methodologies.
+This uploaded paper appears to discuss a research problem using structured methodology, analysis, and evaluation.
 
 Key Insights:
-• The paper focuses on solving complex research problems using modern computational techniques.
-• Experimental analysis and evaluation metrics are included.
-• The proposed methodology demonstrates improved performance and efficiency.
-• Future improvements and research opportunities are discussed.
+• The paper contains academic research content suitable for further review.
+• The extracted text can be used for summarization, literature review, and project documentation.
+• This feature prepares the app for future real AI API integration.
 
 Extracted Preview:
-$shortened
+$preview
 """;
+  }
+
+  Future<void> savePdfSummary() async {
+    if (fileName.isEmpty || aiSummary.isEmpty) return;
+
+    await SummaryService.saveSummary(
+      SummaryModel(title: fileName, summary: aiSummary),
+    );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("PDF summary saved successfully 🚀")),
+    );
   }
 
   String getPreviewText() {
@@ -114,19 +124,14 @@ $shortened
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
-
       appBar: AppBar(
         title: const Text("Upload Paper"),
-
         backgroundColor: const Color(0xFF1E293B),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-
           children: [
             const Center(
               child: Icon(
@@ -141,7 +146,6 @@ $shortened
             const Center(
               child: Text(
                 "Research Paper Upload",
-
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 28,
@@ -154,10 +158,8 @@ $shortened
 
             const Center(
               child: Text(
-                "Upload PDF papers and generate AI summaries.",
-
+                "Upload PDF papers, extract text, and save summaries.",
                 textAlign: TextAlign.center,
-
                 style: TextStyle(color: Colors.white70),
               ),
             ),
@@ -167,12 +169,9 @@ $shortened
             SizedBox(
               width: double.infinity,
               height: 55,
-
               child: ElevatedButton.icon(
                 onPressed: isLoading ? null : pickPDF,
-
                 icon: const Icon(Icons.upload_file),
-
                 label: Text(isLoading ? "Processing..." : "Choose PDF File"),
               ),
             ),
@@ -184,25 +183,18 @@ $shortened
             if (fileName.isNotEmpty)
               Container(
                 width: double.infinity,
-
                 padding: const EdgeInsets.all(18),
-
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E293B),
-
                   borderRadius: BorderRadius.circular(18),
                 ),
-
                 child: Row(
                   children: [
                     const Icon(Icons.description, color: Colors.blueAccent),
-
                     const SizedBox(width: 12),
-
                     Expanded(
                       child: Text(
                         fileName,
-
                         style: const TextStyle(color: Colors.white),
                       ),
                     ),
@@ -215,22 +207,16 @@ $shortened
             if (aiSummary.isNotEmpty)
               Container(
                 width: double.infinity,
-
                 padding: const EdgeInsets.all(20),
-
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E293B),
-
                   borderRadius: BorderRadius.circular(18),
                 ),
-
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-
                   children: [
                     const Text(
                       "AI Generated Summary",
-
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 22,
@@ -242,10 +228,21 @@ $shortened
 
                     Text(
                       aiSummary,
-
                       style: const TextStyle(
                         color: Colors.white70,
                         height: 1.6,
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: savePdfSummary,
+                        icon: const Icon(Icons.bookmark_add),
+                        label: const Text("Save PDF Summary"),
                       ),
                     ),
                   ],
@@ -257,22 +254,16 @@ $shortened
             if (extractedText.isNotEmpty)
               Container(
                 width: double.infinity,
-
                 padding: const EdgeInsets.all(20),
-
                 decoration: BoxDecoration(
                   color: const Color(0xFF1E293B),
-
                   borderRadius: BorderRadius.circular(18),
                 ),
-
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-
                   children: [
                     const Text(
                       "Extracted Text Preview",
-
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -284,7 +275,6 @@ $shortened
 
                     Text(
                       getPreviewText(),
-
                       style: const TextStyle(
                         color: Colors.white70,
                         height: 1.5,
