@@ -124,6 +124,102 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  Widget recentActivityItem({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color iconColor,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: iconColor, size: 28),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> buildRecentActivities() {
+    final activities = <Widget>[];
+
+    if (SummaryService.savedSummaries.isNotEmpty) {
+      final latest = SummaryService.savedSummaries.last;
+      activities.add(
+        recentActivityItem(
+          icon: Icons.description,
+          iconColor: Colors.blueAccent,
+          title: "Latest Summary",
+          subtitle: latest.title,
+        ),
+      );
+    }
+
+    if (ExperimentService.experiments.isNotEmpty) {
+      final latest = ExperimentService.experiments.last;
+      activities.add(
+        recentActivityItem(
+          icon: Icons.science,
+          iconColor: Colors.greenAccent,
+          title: "Latest Experiment",
+          subtitle: latest.experimentName,
+        ),
+      );
+    }
+
+    if (NoteService.notes.isNotEmpty) {
+      final latest = NoteService.notes.last;
+      activities.add(
+        recentActivityItem(
+          icon: Icons.note_alt,
+          iconColor: Colors.purpleAccent,
+          title: "Latest Note",
+          subtitle: latest.title,
+        ),
+      );
+    }
+
+    if (activities.isEmpty) {
+      activities.add(
+        const Text(
+          "No recent activity yet.",
+          style: TextStyle(color: Colors.white70),
+        ),
+      );
+    }
+
+    return activities;
+  }
+
   @override
   Widget build(BuildContext context) {
     final totalSummaries = SummaryService.savedSummaries.length;
@@ -158,14 +254,11 @@ class HomeScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 10),
-
             Text(
               AuthService.currentUser ?? "Unknown User",
               style: const TextStyle(color: Colors.blueAccent, fontSize: 16),
             ),
-
             const SizedBox(height: 28),
 
             Row(
@@ -215,6 +308,32 @@ class HomeScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 28),
+
+            const Text(
+              "Recent Activity",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            ...buildRecentActivities(),
+
+            const SizedBox(height: 28),
+
+            const Text(
+              "Features",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 16),
 
             GridView.builder(
               shrinkWrap: true,
