@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../services/auth_service.dart';
 import '../../../services/summary_service.dart';
+import '../../../services/experiment_service.dart';
+import '../../../services/note_service.dart';
 
 import '../../auth/screens/login_screen.dart';
 import '../../paper/screens/upload_paper_screen.dart';
@@ -74,12 +76,6 @@ class HomeScreen extends StatelessWidget {
     }
   }
 
-  int get totalSummaries => SummaryService.savedSummaries.length;
-
-  int get favoriteSummaries => SummaryService.savedSummaries
-      .where((summary) => summary.isFavorite)
-      .length;
-
   Widget statCard({
     required BuildContext context,
     required IconData icon,
@@ -105,18 +101,22 @@ class HomeScreen extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Icon(icon, color: iconColor, size: 34),
+              Icon(icon, color: iconColor, size: 32),
               const SizedBox(height: 10),
               Text(
                 count,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 6),
-              Text(label, style: const TextStyle(color: Colors.white70)),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
             ],
           ),
         ),
@@ -126,6 +126,13 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final totalSummaries = SummaryService.savedSummaries.length;
+    final favoriteSummaries = SummaryService.savedSummaries
+        .where((summary) => summary.isFavorite)
+        .length;
+    final totalExperiments = ExperimentService.experiments.length;
+    final totalNotes = NoteService.notes.length;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
@@ -138,7 +145,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,11 +158,14 @@ class HomeScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             const SizedBox(height: 10),
+
             Text(
               AuthService.currentUser ?? "Unknown User",
               style: const TextStyle(color: Colors.blueAccent, fontSize: 16),
             ),
+
             const SizedBox(height: 28),
 
             Row(
@@ -168,7 +178,7 @@ class HomeScreen extends StatelessWidget {
                   label: "Summaries",
                   screen: const SavedSummaryScreen(),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 statCard(
                   context: context,
                   icon: Icons.star,
@@ -180,60 +190,84 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
 
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                statCard(
+                  context: context,
+                  icon: Icons.science,
+                  iconColor: Colors.greenAccent,
+                  count: totalExperiments.toString(),
+                  label: "Experiments",
+                  screen: const ExperimentTrackerScreen(),
+                ),
+                const SizedBox(width: 12),
+                statCard(
+                  context: context,
+                  icon: Icons.note_alt,
+                  iconColor: Colors.purpleAccent,
+                  count: totalNotes.toString(),
+                  label: "Notes",
+                  screen: const ResearchNotesScreen(),
+                ),
+              ],
+            ),
+
             const SizedBox(height: 28),
 
-            Expanded(
-              child: GridView.builder(
-                itemCount: features.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.05,
-                ),
-                itemBuilder: (context, index) {
-                  final feature = features[index];
-
-                  return InkWell(
-                    borderRadius: BorderRadius.circular(18),
-                    onTap: () => openFeature(context, feature["title"]!),
-                    child: Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1E293B),
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.auto_awesome,
-                            color: Colors.blueAccent,
-                            size: 34,
-                          ),
-                          const Spacer(),
-                          Text(
-                            feature["title"]!,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            feature["subtitle"]!,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: features.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.05,
               ),
+              itemBuilder: (context, index) {
+                final feature = features[index];
+
+                return InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: () => openFeature(context, feature["title"]!),
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E293B),
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(
+                          Icons.auto_awesome,
+                          color: Colors.blueAccent,
+                          size: 34,
+                        ),
+                        const Spacer(),
+                        Text(
+                          feature["title"]!,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          feature["subtitle"]!,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ],
         ),
