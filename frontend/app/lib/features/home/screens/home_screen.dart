@@ -125,85 +125,110 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget recentActivityItem({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
     required Color iconColor,
+    required Widget screen,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: iconColor, size: 28),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => screen),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: iconColor, size: 28),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-              ],
+                  const SizedBox(height: 5),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white38,
+              size: 16,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  List<Widget> buildRecentActivities() {
+  List<Widget> buildRecentActivities(BuildContext context) {
     final activities = <Widget>[];
 
     if (SummaryService.savedSummaries.isNotEmpty) {
       final latest = SummaryService.savedSummaries.last;
+
       activities.add(
         recentActivityItem(
+          context: context,
           icon: Icons.description,
           iconColor: Colors.blueAccent,
           title: "Latest Summary",
           subtitle: latest.title,
+          screen: const SavedSummaryScreen(),
         ),
       );
     }
 
     if (ExperimentService.experiments.isNotEmpty) {
       final latest = ExperimentService.experiments.last;
+
       activities.add(
         recentActivityItem(
+          context: context,
           icon: Icons.science,
           iconColor: Colors.greenAccent,
           title: "Latest Experiment",
           subtitle: latest.experimentName,
+          screen: const ExperimentTrackerScreen(),
         ),
       );
     }
 
     if (NoteService.notes.isNotEmpty) {
       final latest = NoteService.notes.last;
+
       activities.add(
         recentActivityItem(
+          context: context,
           icon: Icons.note_alt,
           iconColor: Colors.purpleAccent,
           title: "Latest Note",
           subtitle: latest.title,
+          screen: const ResearchNotesScreen(),
         ),
       );
     }
@@ -320,7 +345,7 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            ...buildRecentActivities(),
+            ...buildRecentActivities(context),
 
             const SizedBox(height: 28),
 
