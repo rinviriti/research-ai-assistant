@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../../../models/summary_model.dart';
 import '../../../services/summary_service.dart';
+
 import 'summary_detail_screen.dart';
 
 class SavedSummaryScreen extends StatefulWidget {
@@ -14,50 +17,30 @@ class _SavedSummaryScreenState extends State<SavedSummaryScreen> {
 
   String searchQuery = "";
 
-  void deleteSummary(int index) {
+  List<SummaryModel> get filteredSummaries {
+    if (searchQuery.isEmpty) {
+      return SummaryService.savedSummaries;
+    }
+
+    return SummaryService.savedSummaries.where((summary) {
+      final title = summary.title.toLowerCase();
+
+      final content = summary.summary.toLowerCase();
+
+      final query = searchQuery.toLowerCase();
+
+      return title.contains(query) || content.contains(query);
+    }).toList();
+  }
+
+  Future<void> deleteSummary(int index) async {
     final originalIndex = SummaryService.savedSummaries.indexOf(
       filteredSummaries[index],
     );
 
-    SummaryService.deleteSummary(originalIndex);
+    await SummaryService.deleteSummary(originalIndex);
 
     setState(() {});
-  }
-
-  void openDetails(int index) {
-    final summary = filteredSummaries[index];
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SummaryDetailScreen(summary: summary),
-      ),
-    );
-  }
-
-  void toggleFavorite(int index) {
-    setState(() {
-      filteredSummaries[index].isFavorite =
-          !filteredSummaries[index].isFavorite;
-    });
-  }
-
-  List get filteredSummaries {
-    final summaries = SummaryService.savedSummaries;
-
-    if (searchQuery.isEmpty) {
-      return summaries;
-    }
-
-    return summaries.where((summary) {
-      final title = summary.title.toLowerCase();
-
-      final text = summary.summary.toLowerCase();
-
-      final query = searchQuery.toLowerCase();
-
-      return title.contains(query) || text.contains(query);
-    }).toList();
   }
 
   @override
@@ -79,12 +62,12 @@ class _SavedSummaryScreenState extends State<SavedSummaryScreen> {
         backgroundColor: const Color(0xFF1E293B),
       ),
 
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
 
-            child: TextField(
+        child: Column(
+          children: [
+            TextField(
               controller: searchController,
 
               style: const TextStyle(color: Colors.white),
@@ -97,7 +80,6 @@ class _SavedSummaryScreenState extends State<SavedSummaryScreen> {
                 prefixIcon: const Icon(Icons.search, color: Colors.white70),
 
                 filled: true,
-
                 fillColor: const Color(0xFF1E293B),
 
                 border: OutlineInputBorder(
@@ -111,105 +93,105 @@ class _SavedSummaryScreenState extends State<SavedSummaryScreen> {
                 });
               },
             ),
-          ),
 
-          Expanded(
-            child: summaries.isEmpty
-                ? const Center(
-                    child: Text(
-                      "No matching summaries found.",
+            const SizedBox(height: 24),
 
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(20),
+            Expanded(
+              child: summaries.isEmpty
+                  ? const Center(
+                      child: Text(
+                        "No summaries found.",
 
-                    itemCount: summaries.length,
+                        style: TextStyle(color: Colors.white70),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: summaries.length,
 
-                    itemBuilder: (context, index) {
-                      final summary = summaries[index];
+                      itemBuilder: (context, index) {
+                        final summary = summaries[index];
 
-                      return InkWell(
-                        onTap: () => openDetails(index),
+                        return InkWell(
+                          borderRadius: BorderRadius.circular(18),
 
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 16),
+                          onTap: () {
+                            Navigator.push(
+                              context,
 
-                          padding: const EdgeInsets.all(18),
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    SummaryDetailScreen(summary: summary),
+                              ),
+                            );
+                          },
 
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1E293B),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 16),
 
-                            borderRadius: BorderRadius.circular(18),
-                          ),
+                            padding: const EdgeInsets.all(18),
 
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E293B),
 
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      summary.title,
+                              borderRadius: BorderRadius.circular(18),
+                            ),
 
-                                      style: const TextStyle(
-                                        color: Colors.white,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
 
-                                        fontSize: 18,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        summary.title,
 
-                                        fontWeight: FontWeight.bold,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+
+                                          fontSize: 18,
+
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
-                                  ),
 
-                                  IconButton(
-                                    onPressed: () => toggleFavorite(index),
+                                    IconButton(
+                                      onPressed: () => deleteSummary(index),
 
-                                    icon: Icon(
-                                      summary.isFavorite
-                                          ? Icons.star
-                                          : Icons.star_border,
+                                      icon: const Icon(
+                                        Icons.delete,
 
-                                      color: Colors.amber,
+                                        color: Colors.redAccent,
+                                      ),
                                     ),
-                                  ),
-
-                                  IconButton(
-                                    onPressed: () => deleteSummary(index),
-
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.red,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              Text(
-                                summary.summary,
-
-                                maxLines: 3,
-
-                                overflow: TextOverflow.ellipsis,
-
-                                style: const TextStyle(
-                                  color: Colors.white70,
-
-                                  height: 1.5,
+                                  ],
                                 ),
-                              ),
-                            ],
+
+                                const SizedBox(height: 10),
+
+                                Text(
+                                  summary.summary,
+
+                                  maxLines: 3,
+
+                                  overflow: TextOverflow.ellipsis,
+
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

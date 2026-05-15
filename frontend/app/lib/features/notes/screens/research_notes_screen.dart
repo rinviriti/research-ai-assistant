@@ -16,22 +16,19 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
   final searchController = TextEditingController();
 
   String searchQuery = "";
+  int? editingIndex;
 
   List<NoteModel> get filteredNotes {
-    if (searchQuery.isEmpty) {
-      return NoteService.notes;
-    }
+    if (searchQuery.isEmpty) return NoteService.notes;
 
     return NoteService.notes.where((note) {
-      final title = note.title.toLowerCase();
-      final content = note.content.toLowerCase();
       final query = searchQuery.toLowerCase();
-
-      return title.contains(query) || content.contains(query);
+      return note.title.toLowerCase().contains(query) ||
+          note.content.toLowerCase().contains(query);
     }).toList();
   }
 
-  Future<void> addNote() async {
+  Future<void> saveNote() async {
     final title = titleController.text.trim();
     final content = contentController.text.trim();
 
@@ -42,7 +39,16 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
       return;
     }
 
-    await NoteService.addNote(NoteModel(title: title, content: content));
+    if (editingIndex == null) {
+      await NoteService.addNote(NoteModel(title: title, content: content));
+    } else {
+      NoteService.notes[editingIndex!] = NoteModel(
+        title: title,
+        content: content,
+      );
+      await NoteService.saveToStorage();
+      editingIndex = null;
+    }
 
     titleController.clear();
     contentController.clear();
@@ -50,11 +56,23 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
     setState(() {});
   }
 
-  Future<void> deleteNote(int index) async {
-    final originalIndex = NoteService.notes.indexOf(filteredNotes[index]);
+  void startEdit(int filteredIndex) {
+    final note = filteredNotes[filteredIndex];
+    final originalIndex = NoteService.notes.indexOf(note);
+
+    setState(() {
+      editingIndex = originalIndex;
+      titleController.text = note.title;
+      contentController.text = note.content;
+    });
+  }
+
+  Future<void> deleteNote(int filteredIndex) async {
+    final originalIndex = NoteService.notes.indexOf(
+      filteredNotes[filteredIndex],
+    );
 
     await NoteService.deleteNote(originalIndex);
-
     setState(() {});
   }
 
@@ -101,8 +119,8 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: addNote,
-                child: const Text("Save Note"),
+                onPressed: saveNote,
+                child: Text(editingIndex == null ? "Save Note" : "Update Note"),
               ),
             ),
 
@@ -162,6 +180,13 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                     ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => startEdit(index),
+                                  icon: const Icon(
+                                    Icons.edit,
+                                    color: Colors.blueAccent,
                                   ),
                                 ),
                                 IconButton(
