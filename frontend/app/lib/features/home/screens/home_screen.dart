@@ -10,21 +10,17 @@ import '../../summary/screens/saved_summary_screen.dart';
 import '../../summary/screens/favorite_summary_screen.dart';
 import '../../experiment/screens/experiment_tracker_screen.dart';
 import '../../docs/screens/project_docs_screen.dart';
+import '../../notes/screens/research_notes_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   final List<Map<String, String>> features = const [
-    {
-      "title": "Upload Paper",
-      "subtitle": "Add research papers for AI analysis",
-    },
+    {"title": "Upload Paper", "subtitle": "Extract text from PDF papers"},
     {"title": "AI Summary", "subtitle": "Generate structured summaries"},
     {"title": "Experiment Tracker", "subtitle": "Track datasets and models"},
-    {
-      "title": "Project Docs",
-      "subtitle": "Generate GitHub-ready documentation",
-    },
+    {"title": "Research Notes", "subtitle": "Save literature review ideas"},
+    {"title": "Project Docs", "subtitle": "Generate GitHub-ready README"},
   ];
 
   Future<void> logout(BuildContext context) async {
@@ -60,6 +56,13 @@ class HomeScreen extends StatelessWidget {
         MaterialPageRoute(
           builder: (context) => const ExperimentTrackerScreen(),
         ),
+      );
+    }
+
+    if (title == "Research Notes") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const ResearchNotesScreen()),
       );
     }
 
