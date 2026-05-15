@@ -92,12 +92,24 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
     });
   }
 
+  void cancelEdit() {
+    experimentNameController.clear();
+    modelNameController.clear();
+    resultController.clear();
+    notesController.clear();
+
+    setState(() {
+      editingIndex = null;
+    });
+  }
+
   Future<void> deleteExperiment(int filteredIndex) async {
     final originalIndex = ExperimentService.experiments.indexOf(
       filteredExperiments[filteredIndex],
     );
 
     await ExperimentService.deleteExperiment(originalIndex);
+
     setState(() {});
   }
 
@@ -199,18 +211,21 @@ ${experiment.notes}
               label: "Experiment Name",
               controller: experimentNameController,
             ),
+
             const SizedBox(height: 16),
 
             buildTextField(
               label: "Model Name",
               controller: modelNameController,
             ),
+
             const SizedBox(height: 16),
 
             buildTextField(
               label: "Result / Accuracy",
               controller: resultController,
             ),
+
             const SizedBox(height: 16),
 
             buildTextField(
@@ -221,15 +236,32 @@ ${experiment.notes}
 
             const SizedBox(height: 24),
 
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: saveExperiment,
-                child: Text(
-                  editingIndex == null ? "Add Experiment" : "Update Experiment",
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: saveExperiment,
+                      child: Text(
+                        editingIndex == null
+                            ? "Add Experiment"
+                            : "Update Experiment",
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                if (editingIndex != null) ...[
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: cancelEdit,
+                      child: const Icon(Icons.close),
+                    ),
+                  ),
+                ],
+              ],
             ),
 
             const SizedBox(height: 30),
@@ -310,16 +342,21 @@ ${experiment.notes}
                                 ),
                               ],
                             ),
+
                             const SizedBox(height: 10),
+
                             Text(
                               "Model: ${experiment.modelName}",
                               style: const TextStyle(color: Colors.white70),
                             ),
+
                             const SizedBox(height: 6),
+
                             Text(
                               "Result: ${experiment.result}",
                               style: const TextStyle(color: Colors.blueAccent),
                             ),
+
                             if (experiment.notes.isNotEmpty) ...[
                               const SizedBox(height: 10),
                               Text(

@@ -89,6 +89,41 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
     setState(() {});
   }
 
+  void confirmDelete(int index) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E293B),
+          title: const Text(
+            "Delete Note?",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            "This note will be permanently deleted.",
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                deleteNote(index);
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void copyNote(NoteModel note) {
     Clipboard.setData(
       ClipboardData(
@@ -161,18 +196,14 @@ ${note.content}
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(labelText: "Note Title"),
             ),
-
             const SizedBox(height: 20),
-
             TextField(
               controller: contentController,
               maxLines: 5,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(labelText: "Research Note"),
             ),
-
             const SizedBox(height: 20),
-
             Row(
               children: [
                 Expanded(
@@ -198,9 +229,7 @@ ${note.content}
                 ],
               ],
             ),
-
             const SizedBox(height: 30),
-
             TextField(
               controller: searchController,
               style: const TextStyle(color: Colors.white),
@@ -220,9 +249,7 @@ ${note.content}
                 });
               },
             ),
-
             const SizedBox(height: 24),
-
             notes.isEmpty
                 ? emptyState()
                 : ListView.builder(
@@ -269,7 +296,7 @@ ${note.content}
                                   ),
                                 ),
                                 IconButton(
-                                  onPressed: () => deleteNote(index),
+                                  onPressed: () => confirmDelete(index),
                                   icon: const Icon(
                                     Icons.delete,
                                     color: Colors.redAccent,
@@ -277,9 +304,7 @@ ${note.content}
                                 ),
                               ],
                             ),
-
                             const SizedBox(height: 10),
-
                             Text(
                               note.content,
                               style: const TextStyle(
