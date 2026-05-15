@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../models/experiment_model.dart';
 import '../../../services/experiment_service.dart';
@@ -100,6 +101,31 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
     setState(() {});
   }
 
+  void copyExperiment(ExperimentModel experiment) {
+    Clipboard.setData(
+      ClipboardData(
+        text:
+            """
+Experiment:
+${experiment.experimentName}
+
+Model:
+${experiment.modelName}
+
+Result:
+${experiment.result}
+
+Notes:
+${experiment.notes}
+""",
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Experiment copied to clipboard 🚀")),
+    );
+  }
+
   Widget emptyState() {
     return const Padding(
       padding: EdgeInsets.only(top: 40),
@@ -192,6 +218,7 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
               controller: notesController,
               maxLines: 4,
             ),
+
             const SizedBox(height: 24),
 
             SizedBox(
@@ -258,6 +285,13 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                     ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => copyExperiment(experiment),
+                                  icon: const Icon(
+                                    Icons.copy,
+                                    color: Colors.white70,
                                   ),
                                 ),
                                 IconButton(

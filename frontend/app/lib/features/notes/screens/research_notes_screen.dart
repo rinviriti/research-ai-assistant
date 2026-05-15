@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../models/note_model.dart';
 import '../../../services/note_service.dart';
@@ -23,6 +24,7 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
 
     return NoteService.notes.where((note) {
       final query = searchQuery.toLowerCase();
+
       return note.title.toLowerCase().contains(query) ||
           note.content.toLowerCase().contains(query);
     }).toList();
@@ -46,12 +48,14 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
         title: title,
         content: content,
       );
+
       await NoteService.saveToStorage();
       editingIndex = null;
     }
 
     titleController.clear();
     contentController.clear();
+
     setState(() {});
   }
 
@@ -66,12 +70,42 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
     });
   }
 
+  void cancelEdit() {
+    titleController.clear();
+    contentController.clear();
+
+    setState(() {
+      editingIndex = null;
+    });
+  }
+
   Future<void> deleteNote(int filteredIndex) async {
     final originalIndex = NoteService.notes.indexOf(
       filteredNotes[filteredIndex],
     );
+
     await NoteService.deleteNote(originalIndex);
+
     setState(() {});
+  }
+
+  void copyNote(NoteModel note) {
+    Clipboard.setData(
+      ClipboardData(
+        text:
+            """
+Title:
+${note.title}
+
+Note:
+${note.content}
+""",
+      ),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Note copied to clipboard 🚀")),
+    );
   }
 
   Widget emptyState() {
@@ -127,23 +161,46 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(labelText: "Note Title"),
             ),
+
             const SizedBox(height: 20),
+
             TextField(
               controller: contentController,
               maxLines: 5,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(labelText: "Research Note"),
             ),
+
             const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: saveNote,
-                child: Text(editingIndex == null ? "Save Note" : "Update Note"),
-              ),
+
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: saveNote,
+                      child: Text(
+                        editingIndex == null ? "Save Note" : "Update Note",
+                      ),
+                    ),
+                  ),
+                ),
+                if (editingIndex != null) ...[
+                  const SizedBox(width: 12),
+                  SizedBox(
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: cancelEdit,
+                      child: const Icon(Icons.close),
+                    ),
+                  ),
+                ],
+              ],
             ),
+
             const SizedBox(height: 30),
+
             TextField(
               controller: searchController,
               style: const TextStyle(color: Colors.white),
@@ -163,7 +220,9 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
                 });
               },
             ),
+
             const SizedBox(height: 24),
+
             notes.isEmpty
                 ? emptyState()
                 : ListView.builder(
@@ -196,6 +255,13 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
                                   ),
                                 ),
                                 IconButton(
+                                  onPressed: () => copyNote(note),
+                                  icon: const Icon(
+                                    Icons.copy,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                IconButton(
                                   onPressed: () => startEdit(index),
                                   icon: const Icon(
                                     Icons.edit,
@@ -211,7 +277,9 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
                                 ),
                               ],
                             ),
+
                             const SizedBox(height: 10),
+
                             Text(
                               note.content,
                               style: const TextStyle(
