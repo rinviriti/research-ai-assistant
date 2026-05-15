@@ -16,8 +16,23 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
   final modelNameController = TextEditingController();
   final resultController = TextEditingController();
   final notesController = TextEditingController();
+  final searchController = TextEditingController();
 
   int? editingIndex;
+  String searchQuery = "";
+
+  List<ExperimentModel> get filteredExperiments {
+    if (searchQuery.isEmpty) return ExperimentService.experiments;
+
+    return ExperimentService.experiments.where((experiment) {
+      final query = searchQuery.toLowerCase();
+
+      return experiment.experimentName.toLowerCase().contains(query) ||
+          experiment.modelName.toLowerCase().contains(query) ||
+          experiment.result.toLowerCase().contains(query) ||
+          experiment.notes.toLowerCase().contains(query);
+    }).toList();
+  }
 
   Future<void> saveExperiment() async {
     final experimentName = experimentNameController.text.trim();
@@ -63,11 +78,12 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
     setState(() {});
   }
 
-  void startEdit(int index) {
-    final experiment = ExperimentService.experiments[index];
+  void startEdit(int filteredIndex) {
+    final experiment = filteredExperiments[filteredIndex];
+    final originalIndex = ExperimentService.experiments.indexOf(experiment);
 
     setState(() {
-      editingIndex = index;
+      editingIndex = originalIndex;
       experimentNameController.text = experiment.experimentName;
       modelNameController.text = experiment.modelName;
       resultController.text = experiment.result;
@@ -75,8 +91,12 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
     });
   }
 
-  Future<void> deleteExperiment(int index) async {
-    await ExperimentService.deleteExperiment(index);
+  Future<void> deleteExperiment(int filteredIndex) async {
+    final originalIndex = ExperimentService.experiments.indexOf(
+      filteredExperiments[filteredIndex],
+    );
+
+    await ExperimentService.deleteExperiment(originalIndex);
     setState(() {});
   }
 
@@ -88,7 +108,7 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
           Icon(Icons.science_outlined, color: Colors.greenAccent, size: 80),
           SizedBox(height: 18),
           Text(
-            "No experiments yet",
+            "No experiments found",
             style: TextStyle(
               color: Colors.white,
               fontSize: 22,
@@ -131,12 +151,13 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
     modelNameController.dispose();
     resultController.dispose();
     notesController.dispose();
+    searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final experiments = ExperimentService.experiments;
+    final experiments = filteredExperiments;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
@@ -185,6 +206,28 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
             ),
 
             const SizedBox(height: 30),
+
+            TextField(
+              controller: searchController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: "Search experiments...",
+                hintStyle: const TextStyle(color: Colors.white54),
+                prefixIcon: const Icon(Icons.search, color: Colors.white70),
+                filled: true,
+                fillColor: const Color(0xFF1E293B),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+            ),
+
+            const SizedBox(height: 24),
 
             experiments.isEmpty
                 ? emptyState()

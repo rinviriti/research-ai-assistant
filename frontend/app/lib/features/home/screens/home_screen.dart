@@ -37,42 +37,29 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  void openScreen(BuildContext context, Widget screen) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
+  }
+
   void openFeature(BuildContext context, String title) {
     if (title == "Upload Paper") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const UploadPaperScreen()),
-      );
+      openScreen(context, const UploadPaperScreen());
     }
 
     if (title == "AI Summary") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const SummaryScreen()),
-      );
+      openScreen(context, const SummaryScreen());
     }
 
     if (title == "Experiment Tracker") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const ExperimentTrackerScreen(),
-        ),
-      );
+      openScreen(context, const ExperimentTrackerScreen());
     }
 
     if (title == "Research Notes") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ResearchNotesScreen()),
-      );
+      openScreen(context, const ResearchNotesScreen());
     }
 
     if (title == "Project Docs") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ProjectDocsScreen()),
-      );
+      openScreen(context, const ProjectDocsScreen());
     }
   }
 
@@ -87,12 +74,7 @@ class HomeScreen extends StatelessWidget {
     return Expanded(
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => screen),
-          );
-        },
+        onTap: () => openScreen(context, screen),
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -124,6 +106,43 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  Widget quickAction({
+    required BuildContext context,
+    required IconData icon,
+    required String title,
+    required Widget screen,
+    required Color color,
+  }) {
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: () => openScreen(context, screen),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E293B),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: color, size: 32),
+              const SizedBox(height: 10),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget recentActivityItem({
     required BuildContext context,
     required IconData icon,
@@ -134,12 +153,7 @@ class HomeScreen extends StatelessWidget {
   }) {
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => screen),
-        );
-      },
+      onTap: () => openScreen(context, screen),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
@@ -190,7 +204,6 @@ class HomeScreen extends StatelessWidget {
 
     if (SummaryService.savedSummaries.isNotEmpty) {
       final latest = SummaryService.savedSummaries.last;
-
       activities.add(
         recentActivityItem(
           context: context,
@@ -205,7 +218,6 @@ class HomeScreen extends StatelessWidget {
 
     if (ExperimentService.experiments.isNotEmpty) {
       final latest = ExperimentService.experiments.last;
-
       activities.add(
         recentActivityItem(
           context: context,
@@ -220,7 +232,6 @@ class HomeScreen extends StatelessWidget {
 
     if (NoteService.notes.isNotEmpty) {
       final latest = NoteService.notes.last;
-
       activities.add(
         recentActivityItem(
           context: context,
@@ -279,11 +290,14 @@ class HomeScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             const SizedBox(height: 10),
+
             Text(
               AuthService.currentUser ?? "Unknown User",
               style: const TextStyle(color: Colors.blueAccent, fontSize: 16),
             ),
+
             const SizedBox(height: 28),
 
             Row(
@@ -328,6 +342,47 @@ class HomeScreen extends StatelessWidget {
                   count: totalNotes.toString(),
                   label: "Notes",
                   screen: const ResearchNotesScreen(),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 28),
+
+            const Text(
+              "Quick Actions",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                quickAction(
+                  context: context,
+                  icon: Icons.auto_awesome,
+                  title: "New Summary",
+                  screen: const SummaryScreen(),
+                  color: Colors.blueAccent,
+                ),
+                const SizedBox(width: 12),
+                quickAction(
+                  context: context,
+                  icon: Icons.picture_as_pdf,
+                  title: "Upload PDF",
+                  screen: const UploadPaperScreen(),
+                  color: Colors.redAccent,
+                ),
+                const SizedBox(width: 12),
+                quickAction(
+                  context: context,
+                  icon: Icons.note_add,
+                  title: "Add Note",
+                  screen: const ResearchNotesScreen(),
+                  color: Colors.purpleAccent,
                 ),
               ],
             ),
