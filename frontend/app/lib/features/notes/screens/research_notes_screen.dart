@@ -52,7 +52,6 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
 
     titleController.clear();
     contentController.clear();
-
     setState(() {});
   }
 
@@ -71,9 +70,34 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
     final originalIndex = NoteService.notes.indexOf(
       filteredNotes[filteredIndex],
     );
-
     await NoteService.deleteNote(originalIndex);
     setState(() {});
+  }
+
+  Widget emptyState() {
+    return const Padding(
+      padding: EdgeInsets.only(top: 40),
+      child: Column(
+        children: [
+          Icon(Icons.note_alt_outlined, color: Colors.purpleAccent, size: 80),
+          SizedBox(height: 18),
+          Text(
+            "No notes found",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            "Save literature review ideas, research thoughts, or experiment plans here.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70, height: 1.5),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -103,18 +127,14 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(labelText: "Note Title"),
             ),
-
             const SizedBox(height: 20),
-
             TextField(
               controller: contentController,
               maxLines: 5,
               style: const TextStyle(color: Colors.white),
               decoration: const InputDecoration(labelText: "Research Note"),
             ),
-
             const SizedBox(height: 20),
-
             SizedBox(
               width: double.infinity,
               height: 55,
@@ -123,9 +143,7 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
                 child: Text(editingIndex == null ? "Save Note" : "Update Note"),
               ),
             ),
-
             const SizedBox(height: 30),
-
             TextField(
               controller: searchController,
               style: const TextStyle(color: Colors.white),
@@ -145,14 +163,9 @@ class _ResearchNotesScreenState extends State<ResearchNotesScreen> {
                 });
               },
             ),
-
             const SizedBox(height: 24),
-
             notes.isEmpty
-                ? const Text(
-                    "No research notes found.",
-                    style: TextStyle(color: Colors.white70),
-                  )
+                ? emptyState()
                 : ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
