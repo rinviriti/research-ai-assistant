@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
 import '../../../models/summary_model.dart';
+import '../../../services/gemini_service.dart';
 import '../../../services/summary_service.dart';
 
 class UploadPaperScreen extends StatefulWidget {
@@ -62,40 +63,39 @@ class _UploadPaperScreenState extends State<UploadPaperScreen> {
 
       document.dispose();
 
+      if (text.isEmpty) {
+        setState(() {
+          fileName = file.name;
+          extractedText = "No readable text found.";
+          aiSummary = "No readable text found in this PDF.";
+          isLoading = false;
+        });
+        return;
+      }
+
+      final limitedText = text.length > 4000 ? text.substring(0, 4000) : text;
+
+      final summary = await GeminiService.generateSummary(
+        title: file.name,
+        abstract: limitedText,
+      );
+
+      if (!mounted) return;
+
       setState(() {
         fileName = file.name;
-        extractedText = text.isEmpty ? "No readable text found." : text;
-        aiSummary = generateAISummary(text);
+        extractedText = text;
+        aiSummary = summary;
         isLoading = false;
       });
     } catch (e) {
       setState(() {
         fileName = file.name;
-        extractedText = "Failed to extract PDF text.";
+        extractedText = "Failed to extract or summarize PDF text.";
         aiSummary = "";
         isLoading = false;
       });
     }
-  }
-
-  String generateAISummary(String text) {
-    if (text.isEmpty) {
-      return "No readable text found in this PDF.";
-    }
-
-    final preview = text.length > 900 ? text.substring(0, 900) : text;
-
-    return """
-This uploaded paper appears to discuss a research problem using structured methodology, analysis, and evaluation.
-
-Key Insights:
-• The paper contains academic research content suitable for further review.
-• The extracted text can be used for summarization, literature review, and project documentation.
-• This feature prepares the app for future real AI API integration.
-
-Extracted Preview:
-$preview
-""";
   }
 
   Future<void> savePdfSummary() async {
@@ -145,7 +145,7 @@ $preview
 
             const Center(
               child: Text(
-                "Research Paper Upload",
+                "AI PDF Summarizer",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 28,
@@ -158,7 +158,7 @@ $preview
 
             const Center(
               child: Text(
-                "Upload PDF papers, extract text, and save summaries.",
+                "Upload a research paper PDF and generate a Gemini-powered summary.",
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white70),
               ),
@@ -172,7 +172,9 @@ $preview
               child: ElevatedButton.icon(
                 onPressed: isLoading ? null : pickPDF,
                 icon: const Icon(Icons.upload_file),
-                label: Text(isLoading ? "Processing..." : "Choose PDF File"),
+                label: Text(
+                  isLoading ? "Processing with AI..." : "Choose PDF File",
+                ),
               ),
             ),
 
@@ -216,7 +218,7 @@ $preview
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "AI Generated Summary",
+                      "AI Generated PDF Summary",
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 22,
