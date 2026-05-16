@@ -47,85 +47,85 @@ Research AI Assistant helps students and researchers organize research workflows
 
 ## First Page
 
-![First Page](assets/screenshots/firstpage.png)
+![First Page](frontend/app/assets/screenshots/firstpage.png)
 
 ---
 
 ## Login Page
 
-![Login](assets/screenshots/loginpage.png)
+![Login](frontend/app/assets/screenshots/loginpage.png)
 
 ---
 
 ## Create Account Page
 
-![Create Account](assets/screenshots/createaccount_page.png)
+![Create Account](frontend/app/assets/screenshots/createaccount_page.png)
 
 ---
 
 ## Dashboard
 
-![Dashboard](assets/screenshots/dashboard.png)
+![Dashboard](frontend/app/assets/screenshots/dashboard.png)
 
 ---
 
 ## Features Page
 
-![Features](assets/screenshots/features.png)
+![Features](frontend/app/assets/screenshots/features.png)
 
 ---
 
 ## AI Summary Generator
 
-![Summary](assets/screenshots/ai_summary.png)
+![Summary](frontend/app/assets/screenshots/ai_summary.png)
 
 ---
 
 ## AI Research Chat
 
-![Chat](assets/screenshots/ai_chat.png)
+![Chat](frontend/app/assets/screenshots/ai_chat.png)
 
 ---
 
 ## Research Notes
 
-![Notes](assets/screenshots/research_notes.png)
+![Notes](frontend/app/assets/screenshots/research_notes.png)
 
 ---
 
 ## Experiment Tracker
 
-![Experiments](assets/screenshots/experiment_tracker.png)
+![Experiments](frontend/app/assets/screenshots/experiment_tracker.png)
 
 ---
 
 ## Project Docs Generator
 
-![Project Docs](assets/screenshots/readme_generator.png)
+![Project Docs](frontend/app/assets/screenshots/readme_generator.png)
 
 ---
 
 ## Profile Page
 
-![Profile](assets/screenshots/profile_page.png)
+![Profile](frontend/app/assets/screenshots/profile_page.png)
 
 ---
 
 ## About Page
 
-![About](assets/screenshots/about_page.png)
+![About](frontend/app/assets/screenshots/about_page.png)
 
 ---
 
 ## About Page 2
 
-![About 2](assets/screenshots/about_page2.png)
+![About 2](frontend/app/assets/screenshots/about_page2.png)
 
 ---
 
 ## Settings
 
-![Settings](assets/screenshots/settings.png)
+![Settings](frontend/app/assets/screenshots/settings.png)
 
 ---
 
@@ -156,7 +156,41 @@ The AI Summary, AI Chat, and README Generator should therefore be considered AI-
 - [ ] Firebase backend
 - [ ] Cloud synchronization
 - [ ] APK/Web deployment
-      
+
+---
+
+# How to Run
+
+Clone the repository:
+
+```bash
+git clone YOUR_REPOSITORY_LINK
+```
+
+Go to project folder:
+
+```bash
+cd frontend/app
+```
+
+Install packages:
+
+```bash
+flutter pub get
+```
+
+Run app:
+
+```bash
+flutter run
+```
+
+Run with Gemini API:
+
+```bash
+flutter run --dart-define=GEMINI_API_KEY=YOUR_KEY
+```
+
 ---
 
 # Future Improvements
