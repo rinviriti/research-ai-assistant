@@ -44,26 +44,15 @@ class HomeScreen extends StatelessWidget {
   }
 
   void openFeature(BuildContext context, String title) {
-    if (title == "AI Chat") {
-      openScreen(context, const AIChatScreen());
-    }
-
-    if (title == "Upload Paper") {
-      openScreen(context, const UploadPaperScreen());
-    }
-
-    if (title == "AI Summary") {
-      openScreen(context, const SummaryScreen());
-    }
-
+    if (title == "AI Chat") openScreen(context, const AIChatScreen());
+    if (title == "Upload Paper") openScreen(context, const UploadPaperScreen());
+    if (title == "AI Summary") openScreen(context, const SummaryScreen());
     if (title == "Experiment Tracker") {
       openScreen(context, const ExperimentTrackerScreen());
     }
-
     if (title == "Research Notes") {
       openScreen(context, const ResearchNotesScreen());
     }
-
     if (title == "Project Docs") {
       openScreen(context, const ProjectDocsScreen());
     }
@@ -79,13 +68,14 @@ class HomeScreen extends StatelessWidget {
   }) {
     return Expanded(
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         onTap: () => openScreen(context, screen),
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B),
-            borderRadius: BorderRadius.circular(18),
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white10),
           ),
           child: Column(
             children: [
@@ -95,7 +85,7 @@ class HomeScreen extends StatelessWidget {
                 count,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 22,
+                  fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -121,13 +111,13 @@ class HomeScreen extends StatelessWidget {
   }) {
     return Expanded(
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         onTap: () => openScreen(context, screen),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B),
-            borderRadius: BorderRadius.circular(18),
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white10),
           ),
           child: Column(
@@ -158,14 +148,15 @@ class HomeScreen extends StatelessWidget {
     required Widget screen,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       onTap: () => openScreen(context, screen),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E293B),
-          borderRadius: BorderRadius.circular(16),
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white10),
         ),
         child: Row(
           children: [
@@ -210,11 +201,12 @@ class HomeScreen extends StatelessWidget {
 
     if (SummaryService.savedSummaries.isNotEmpty) {
       final latest = SummaryService.savedSummaries.last;
+
       activities.add(
         recentActivityItem(
           context: context,
           icon: Icons.description,
-          iconColor: Colors.blueAccent,
+          iconColor: Theme.of(context).colorScheme.primary,
           title: "Latest Summary",
           subtitle: latest.title,
           screen: const SavedSummaryScreen(),
@@ -224,6 +216,7 @@ class HomeScreen extends StatelessWidget {
 
     if (ExperimentService.experiments.isNotEmpty) {
       final latest = ExperimentService.experiments.last;
+
       activities.add(
         recentActivityItem(
           context: context,
@@ -238,11 +231,12 @@ class HomeScreen extends StatelessWidget {
 
     if (NoteService.notes.isNotEmpty) {
       final latest = NoteService.notes.last;
+
       activities.add(
         recentActivityItem(
           context: context,
           icon: Icons.note_alt,
-          iconColor: Colors.purpleAccent,
+          iconColor: Theme.of(context).colorScheme.secondary,
           title: "Latest Note",
           subtitle: latest.title,
           screen: const ResearchNotesScreen(),
@@ -252,9 +246,18 @@ class HomeScreen extends StatelessWidget {
 
     if (activities.isEmpty) {
       activities.add(
-        const Text(
-          "No recent activity yet.",
-          style: TextStyle(color: Colors.white70),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: const Text(
+            "No recent activity yet.",
+            style: TextStyle(color: Colors.white70),
+          ),
         ),
       );
     }
@@ -271,10 +274,12 @@ class HomeScreen extends StatelessWidget {
     final totalExperiments = ExperimentService.experiments.length;
     final totalNotes = NoteService.notes.length;
 
+    final primary = Theme.of(context).colorScheme.primary;
+    final secondary = Theme.of(context).colorScheme.secondary;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1E293B),
         title: const Text("Dashboard"),
         actions: [
           IconButton(
@@ -301,7 +306,11 @@ class HomeScreen extends StatelessWidget {
 
             Text(
               AuthService.currentUser ?? "Unknown User",
-              style: const TextStyle(color: Colors.blueAccent, fontSize: 16),
+              style: TextStyle(
+                color: primary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
 
             const SizedBox(height: 28),
@@ -311,7 +320,7 @@ class HomeScreen extends StatelessWidget {
                 statCard(
                   context: context,
                   icon: Icons.description,
-                  iconColor: Colors.blueAccent,
+                  iconColor: primary,
                   count: totalSummaries.toString(),
                   label: "Summaries",
                   screen: const SavedSummaryScreen(),
@@ -344,7 +353,7 @@ class HomeScreen extends StatelessWidget {
                 statCard(
                   context: context,
                   icon: Icons.note_alt,
-                  iconColor: Colors.purpleAccent,
+                  iconColor: secondary,
                   count: totalNotes.toString(),
                   label: "Notes",
                   screen: const ResearchNotesScreen(),
@@ -380,7 +389,7 @@ class HomeScreen extends StatelessWidget {
                   icon: Icons.auto_awesome,
                   title: "Summary",
                   screen: const SummaryScreen(),
-                  color: Colors.blueAccent,
+                  color: primary,
                 ),
                 const SizedBox(width: 12),
                 quickAction(
@@ -435,22 +444,19 @@ class HomeScreen extends StatelessWidget {
                 final feature = features[index];
 
                 return InkWell(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(20),
                   onTap: () => openFeature(context, feature["title"]!),
                   child: Container(
                     padding: const EdgeInsets.all(18),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B),
-                      borderRadius: BorderRadius.circular(18),
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white10),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
-                          Icons.auto_awesome,
-                          color: Colors.blueAccent,
-                          size: 34,
-                        ),
+                        Icon(Icons.auto_awesome, color: primary, size: 34),
                         const Spacer(),
                         Text(
                           feature["title"]!,
