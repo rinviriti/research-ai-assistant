@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/chat_message_model.dart';
+import '../../../services/chat_service.dart';
 import '../../../services/gemini_service.dart';
 
 class AIChatScreen extends StatefulWidget {
@@ -12,15 +13,6 @@ class AIChatScreen extends StatefulWidget {
 
 class _AIChatScreenState extends State<AIChatScreen> {
   final messageController = TextEditingController();
-
-  final List<ChatMessageModel> messages = [
-    ChatMessageModel(
-      message:
-          "Hi! I am your Research AI Assistant. Ask me about papers, thesis ideas, methodology, experiments, or research writing.",
-      isUser: false,
-    ),
-  ];
-
   bool isLoading = false;
 
   Future<void> sendMessage() async {
@@ -28,9 +20,11 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
     if (userMessage.isEmpty) return;
 
-    setState(() {
-      messages.add(ChatMessageModel(message: userMessage, isUser: true));
+    await ChatService.addMessage(
+      ChatMessageModel(message: userMessage, isUser: true),
+    );
 
+    setState(() {
       isLoading = true;
       messageController.clear();
     });
@@ -42,11 +36,18 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
     if (!mounted) return;
 
-    setState(() {
-      messages.add(ChatMessageModel(message: response, isUser: false));
+    await ChatService.addMessage(
+      ChatMessageModel(message: response, isUser: false),
+    );
 
+    setState(() {
       isLoading = false;
     });
+  }
+
+  Future<void> clearChat() async {
+    await ChatService.clearChat();
+    setState(() {});
   }
 
   Widget messageBubble(ChatMessageModel message) {
@@ -76,11 +77,19 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final messages = ChatService.messages;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
         title: const Text("AI Research Chat"),
         backgroundColor: const Color(0xFF1E293B),
+        actions: [
+          IconButton(
+            onPressed: clearChat,
+            icon: const Icon(Icons.delete_sweep),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -103,7 +112,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
               },
             ),
           ),
-
           Container(
             padding: const EdgeInsets.all(16),
             decoration: const BoxDecoration(color: Color(0xFF1E293B)),

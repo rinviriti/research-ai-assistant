@@ -5,6 +5,7 @@ import '../../../services/auth_service.dart';
 import '../../../services/summary_service.dart';
 import '../../../services/experiment_service.dart';
 import '../../../services/note_service.dart';
+import '../../../services/chat_service.dart';
 
 import '../../auth/screens/login_screen.dart';
 import '../../navigation/main_navigation_screen.dart';
@@ -28,6 +29,7 @@ class _SplashScreenState extends State<SplashScreen> {
     await SummaryService.loadSummaries();
     await ExperimentService.loadExperiments();
     await NoteService.loadNotes();
+    await ChatService.loadChat();
 
     final prefs = await SharedPreferences.getInstance();
     final hasSeenOnboarding = prefs.getBool("has_seen_onboarding") ?? false;
