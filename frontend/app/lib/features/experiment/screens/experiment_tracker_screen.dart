@@ -113,6 +113,41 @@ class _ExperimentTrackerScreenState extends State<ExperimentTrackerScreen> {
     setState(() {});
   }
 
+  void confirmDelete(int index) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1E293B),
+          title: const Text(
+            "Delete Experiment?",
+            style: TextStyle(color: Colors.white),
+          ),
+          content: const Text(
+            "This experiment record will be permanently deleted.",
+            style: TextStyle(color: Colors.white70),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                deleteExperiment(index);
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void copyExperiment(ExperimentModel experiment) {
     Clipboard.setData(
       ClipboardData(
@@ -334,7 +369,7 @@ ${experiment.notes}
                                   ),
                                 ),
                                 IconButton(
-                                  onPressed: () => deleteExperiment(index),
+                                  onPressed: () => confirmDelete(index),
                                   icon: const Icon(
                                     Icons.delete,
                                     color: Colors.redAccent,

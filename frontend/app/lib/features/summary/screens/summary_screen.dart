@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/summary_model.dart';
+import '../../../services/gemini_service.dart';
 import '../../../services/summary_service.dart';
+
 import 'saved_summary_screen.dart';
 
 class SummaryScreen extends StatefulWidget {
@@ -34,17 +36,26 @@ class _SummaryScreenState extends State<SummaryScreen> {
       generatedSummary = "";
     });
 
-    await Future.delayed(const Duration(seconds: 2));
+    final result = await GeminiService.generateSummary(
+      title: title,
+      abstract: abstractText,
+    );
+
+    if (!mounted) return;
 
     setState(() {
+      generatedSummary = result;
       isLoading = false;
-      generatedSummary =
-          "This paper titled \"$title\" presents an AI-assisted approach for research understanding and structured experimentation.";
     });
   }
 
   Future<void> saveSummary() async {
-    if (generatedSummary.isEmpty) return;
+    if (generatedSummary.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Generate a summary first.")),
+      );
+      return;
+    }
 
     await SummaryService.saveSummary(
       SummaryModel(
@@ -56,8 +67,17 @@ class _SummaryScreenState extends State<SummaryScreen> {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Summary saved permanently 🚀")),
+      const SnackBar(content: Text("Summary saved successfully 🚀")),
     );
+  }
+
+  void clearFields() {
+    titleController.clear();
+    abstractController.clear();
+
+    setState(() {
+      generatedSummary = "";
+    });
   }
 
   @override
@@ -65,6 +85,25 @@ class _SummaryScreenState extends State<SummaryScreen> {
     titleController.dispose();
     abstractController.dispose();
     super.dispose();
+  }
+
+  Widget inputField({
+    required String label,
+    required TextEditingController controller,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        filled: true,
+        fillColor: const Color(0xFF1E293B),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+    );
   }
 
   @override
@@ -88,44 +127,119 @@ class _SummaryScreenState extends State<SummaryScreen> {
           ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            TextField(
-              controller: titleController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: "Paper Title"),
-            ),
+            const Icon(Icons.auto_awesome, color: Colors.blueAccent, size: 70),
+
             const SizedBox(height: 20),
-            TextField(
+
+            const Text(
+              "Real AI Research Summary",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            const Text(
+              "Enter a paper title and abstract to generate a Gemini-powered research summary.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70, height: 1.5),
+            ),
+
+            const SizedBox(height: 30),
+
+            inputField(label: "Paper Title", controller: titleController),
+
+            const SizedBox(height: 20),
+
+            inputField(
+              label: "Abstract",
               controller: abstractController,
-              maxLines: 5,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(labelText: "Abstract"),
+              maxLines: 7,
             ),
-            const SizedBox(height: 25),
-            ElevatedButton(
-              onPressed: isLoading ? null : generateSummary,
-              child: Text(isLoading ? "Generating..." : "Generate Summary"),
-            ),
-            const SizedBox(height: 25),
-            if (generatedSummary.isNotEmpty)
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      Text(
-                        generatedSummary,
-                        style: const TextStyle(color: Colors.white70),
+
+            const SizedBox(height: 24),
+
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 55,
+                    child: ElevatedButton.icon(
+                      onPressed: isLoading ? null : generateSummary,
+                      icon: const Icon(Icons.psychology),
+                      label: Text(
+                        isLoading ? "Generating..." : "Generate AI Summary",
                       ),
-                      const SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: saveSummary,
-                        child: const Text("Save Summary"),
-                      ),
-                    ],
+                    ),
                   ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : clearFields,
+                    child: const Icon(Icons.refresh),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 30),
+
+            if (isLoading) const CircularProgressIndicator(),
+
+            if (generatedSummary.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: Colors.white12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Generated Summary",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    Text(
+                      generatedSummary,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.6,
+                        fontSize: 15,
+                      ),
+                    ),
+
+                    const SizedBox(height: 22),
+
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: saveSummary,
+                        icon: const Icon(Icons.save),
+                        label: const Text("Save Summary"),
+                      ),
+                    ),
+                  ],
                 ),
               ),
           ],
