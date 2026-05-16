@@ -109,40 +109,6 @@ The AI Summary, AI Chat, and README Generator should therefore be considered AI-
 
 ---
 
-# How to Run
-
-Clone the repository:
-
-```bash
-git clone YOUR_REPOSITORY_LINK
-```
-
-Go to project folder:
-
-```bash
-cd frontend/app
-```
-
-Install packages:
-
-```bash
-flutter pub get
-```
-
-Run app:
-
-```bash
-flutter run
-```
-
-Run with Gemini API:
-
-```bash
-flutter run --dart-define=GEMINI_API_KEY=YOUR_KEY
-```
-
----
-
 # Future Improvements
 
 - Firebase Authentication
