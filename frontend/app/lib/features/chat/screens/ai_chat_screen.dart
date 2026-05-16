@@ -15,8 +15,16 @@ class _AIChatScreenState extends State<AIChatScreen> {
   final messageController = TextEditingController();
   bool isLoading = false;
 
-  Future<void> sendMessage() async {
-    final userMessage = messageController.text.trim();
+  final List<String> quickPrompts = const [
+    "Suggest thesis ideas in AI healthcare",
+    "Explain this paper simply",
+    "Create research methodology",
+    "Improve my abstract",
+    "Suggest future work",
+  ];
+
+  Future<void> sendMessage({String? presetMessage}) async {
+    final userMessage = presetMessage ?? messageController.text.trim();
 
     if (userMessage.isEmpty) return;
 
@@ -48,6 +56,22 @@ class _AIChatScreenState extends State<AIChatScreen> {
   Future<void> clearChat() async {
     await ChatService.clearChat();
     setState(() {});
+  }
+
+  Widget quickPromptChip(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ActionChip(
+        label: Text(text),
+        backgroundColor: const Color(0xFF1E293B),
+        labelStyle: const TextStyle(color: Colors.white70),
+        onPressed: isLoading
+            ? null
+            : () {
+                sendMessage(presetMessage: text);
+              },
+      ),
+    );
   }
 
   Widget messageBubble(ChatMessageModel message) {
@@ -93,6 +117,15 @@ class _AIChatScreenState extends State<AIChatScreen> {
       ),
       body: Column(
         children: [
+          Container(
+            height: 56,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: quickPrompts.map(quickPromptChip).toList(),
+            ),
+          ),
+
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(20),
@@ -112,6 +145,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
               },
             ),
           ),
+
           Container(
             padding: const EdgeInsets.all(16),
             decoration: const BoxDecoration(color: Color(0xFF1E293B)),
@@ -138,7 +172,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
                 CircleAvatar(
                   backgroundColor: Colors.blueAccent,
                   child: IconButton(
-                    onPressed: isLoading ? null : sendMessage,
+                    onPressed: isLoading ? null : () => sendMessage(),
                     icon: const Icon(Icons.send, color: Colors.white),
                   ),
                 ),
