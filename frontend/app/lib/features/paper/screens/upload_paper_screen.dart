@@ -75,9 +75,9 @@ class _UploadPaperScreenState extends State<UploadPaperScreen> {
 
       final limitedText = text.length > 4000 ? text.substring(0, 4000) : text;
 
-      final summary = await GeminiService.generateSummary(
-        title: file.name,
-        abstract: limitedText,
+      final summary = await GeminiService.generatePdfSummary(
+        fileName: file.name,
+        extractedText: limitedText,
       );
 
       if (!mounted) return;

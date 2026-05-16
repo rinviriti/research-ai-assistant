@@ -3,12 +3,44 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class GeminiService {
-  static const String apiKey = "AIzaSyD9MNUrynYx9kBLjnTtjp8BUWTOdmkD_tE";
+  static const String apiKey = String.fromEnvironment(
+    "AIzaSyDmOeiLC4kQRAUUaSUHsPCTjei1PdYEktI",
+  );
+  static Future<String> generatePdfSummary({
+    required String fileName,
+    required String extractedText,
+  }) async {
+    final limitedText = extractedText.length > 3000
+        ? extractedText.substring(0, 3000)
+        : extractedText;
+
+    return generateSummary(
+      title: "PDF Research Paper: $fileName",
+      abstract:
+          """
+Summarize this uploaded research paper PDF.
+
+Focus on:
+1. Paper topic
+2. Main objective
+3. Methodology
+4. Key contribution
+5. Possible future work
+
+PDF Text:
+$limitedText
+""",
+    );
+  }
 
   static Future<String> generateSummary({
     required String title,
     required String abstract,
   }) async {
+    if (apiKey.isEmpty) {
+      return generateFallbackSummary(title, abstract);
+    }
+
     try {
       final response = await http.post(
         Uri.parse(
@@ -94,7 +126,7 @@ The study suggests that intelligent AI-based methods can improve accuracy, effic
 4. Conclusion
 Overall, the work demonstrates the potential of AI-driven systems in $researchArea. Future improvements may include larger datasets, real-world validation, explainable AI, and deployment in practical research or clinical settings.
 
-Note: Gemini quota was unavailable, so this fallback summary was generated locally.
+Note: Gemini API was unavailable or quota-limited, so this fallback summary was generated locally.
 """;
   }
 }
