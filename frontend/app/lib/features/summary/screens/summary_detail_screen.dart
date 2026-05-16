@@ -14,6 +14,7 @@ class SummaryDetailScreen extends StatefulWidget {
 }
 
 class _SummaryDetailScreenState extends State<SummaryDetailScreen> {
+  late SummaryModel currentSummary;
   late TextEditingController titleController;
   late TextEditingController summaryController;
 
@@ -22,49 +23,66 @@ class _SummaryDetailScreenState extends State<SummaryDetailScreen> {
   @override
   void initState() {
     super.initState();
-    titleController = TextEditingController(text: widget.summary.title);
-    summaryController = TextEditingController(text: widget.summary.summary);
+
+    currentSummary = widget.summary;
+
+    titleController = TextEditingController(text: currentSummary.title);
+
+    summaryController = TextEditingController(text: currentSummary.summary);
   }
 
   Future<void> toggleFavorite() async {
-    setState(() {
-      widget.summary.isFavorite = !widget.summary.isFavorite;
-    });
+    final index = SummaryService.savedSummaries.indexOf(currentSummary);
 
-    await SummaryService.saveToStorage();
+    final updatedSummary = SummaryModel(
+      title: currentSummary.title,
+      summary: currentSummary.summary,
+      isFavorite: !currentSummary.isFavorite,
+    );
+
+    if (index != -1) {
+      SummaryService.savedSummaries[index] = updatedSummary;
+      await SummaryService.saveToStorage();
+    }
+
+    setState(() {
+      currentSummary = updatedSummary;
+    });
   }
 
   Future<void> saveEditedSummary() async {
-    final title = titleController.text.trim();
-    final summaryText = summaryController.text.trim();
+    final newTitle = titleController.text.trim();
+    final newSummaryText = summaryController.text.trim();
 
-    if (title.isEmpty || summaryText.isEmpty) {
+    if (newTitle.isEmpty || newSummaryText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Title and summary cannot be empty.")),
       );
       return;
     }
 
-    final index = SummaryService.savedSummaries.indexOf(widget.summary);
+    final index = SummaryService.savedSummaries.indexOf(currentSummary);
+
+    final updatedSummary = SummaryModel(
+      title: newTitle,
+      summary: newSummaryText,
+      isFavorite: currentSummary.isFavorite,
+    );
 
     if (index != -1) {
-      SummaryService.savedSummaries[index] = SummaryModel(
-        title: title,
-        summary: summaryText,
-        isFavorite: widget.summary.isFavorite,
-      );
-
+      SummaryService.savedSummaries[index] = updatedSummary;
       await SummaryService.saveToStorage();
     }
 
     if (!mounted) return;
 
     setState(() {
+      currentSummary = updatedSummary;
       isEditing = false;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Summary updated successfully.")),
+      const SnackBar(content: Text("Summary updated successfully 🚀")),
     );
   }
 
@@ -74,10 +92,10 @@ class _SummaryDetailScreenState extends State<SummaryDetailScreen> {
         text:
             """
 Title:
-${titleController.text}
+${currentSummary.title}
 
 Summary:
-${summaryController.text}
+${currentSummary.summary}
 """,
       ),
     );
@@ -96,20 +114,18 @@ ${summaryController.text}
 
   @override
   Widget build(BuildContext context) {
-    final displayTitle = titleController.text;
-    final displaySummary = summaryController.text;
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("Summary Details"),
-        backgroundColor: const Color(0xFF1E293B),
         actions: [
           IconButton(
             onPressed: toggleFavorite,
             icon: Icon(
-              widget.summary.isFavorite ? Icons.star : Icons.star_border,
-              color: widget.summary.isFavorite ? Colors.amber : Colors.white,
+              currentSummary.isFavorite ? Icons.star : Icons.star_border,
+              color: currentSummary.isFavorite ? Colors.amber : Colors.white,
             ),
           ),
           IconButton(onPressed: copySummary, icon: const Icon(Icons.copy)),
@@ -129,8 +145,9 @@ ${summaryController.text}
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B),
-            borderRadius: BorderRadius.circular(18),
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white10),
           ),
           child: isEditing
               ? Column(
@@ -138,28 +155,23 @@ ${summaryController.text}
                     TextField(
                       controller: titleController,
                       style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        labelText: "Title",
-                        labelStyle: TextStyle(color: Colors.white70),
-                      ),
+                      decoration: const InputDecoration(labelText: "Title"),
                     ),
                     const SizedBox(height: 20),
                     TextField(
                       controller: summaryController,
-                      maxLines: 10,
+                      maxLines: 12,
                       style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        labelText: "Summary",
-                        labelStyle: TextStyle(color: Colors.white70),
-                      ),
+                      decoration: const InputDecoration(labelText: "Summary"),
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
                       height: 55,
-                      child: ElevatedButton(
+                      child: ElevatedButton.icon(
                         onPressed: saveEditedSummary,
-                        child: const Text("Save Changes"),
+                        icon: const Icon(Icons.save),
+                        label: const Text("Save Changes"),
                       ),
                     ),
                   ],
@@ -168,16 +180,16 @@ ${summaryController.text}
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      displayTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      currentSummary.title,
+                      style: TextStyle(
+                        color: primary,
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      displaySummary,
+                      currentSummary.summary,
                       style: const TextStyle(
                         color: Colors.white70,
                         height: 1.7,

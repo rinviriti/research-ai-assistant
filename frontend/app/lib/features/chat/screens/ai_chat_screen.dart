@@ -63,18 +63,17 @@ class _AIChatScreenState extends State<AIChatScreen> {
       padding: const EdgeInsets.only(right: 8),
       child: ActionChip(
         label: Text(text),
-        backgroundColor: const Color(0xFF1E293B),
+        backgroundColor: Theme.of(context).cardColor,
         labelStyle: const TextStyle(color: Colors.white70),
-        onPressed: isLoading
-            ? null
-            : () {
-                sendMessage(presetMessage: text);
-              },
+        side: const BorderSide(color: Colors.white10),
+        onPressed: isLoading ? null : () => sendMessage(presetMessage: text),
       ),
     );
   }
 
   Widget messageBubble(ChatMessageModel message) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Align(
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -82,12 +81,17 @@ class _AIChatScreenState extends State<AIChatScreen> {
         padding: const EdgeInsets.all(14),
         constraints: const BoxConstraints(maxWidth: 320),
         decoration: BoxDecoration(
-          color: message.isUser ? Colors.blueAccent : const Color(0xFF1E293B),
+          color: message.isUser ? primary : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(18),
+          border: message.isUser ? null : Border.all(color: Colors.white10),
         ),
         child: Text(
           message.message,
-          style: const TextStyle(color: Colors.white, height: 1.5),
+          style: TextStyle(
+            color: message.isUser ? Colors.black : Colors.white,
+            height: 1.5,
+            fontWeight: message.isUser ? FontWeight.w600 : FontWeight.normal,
+          ),
         ),
       ),
     );
@@ -104,10 +108,9 @@ class _AIChatScreenState extends State<AIChatScreen> {
     final messages = ChatService.messages;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("AI Research Chat"),
-        backgroundColor: const Color(0xFF1E293B),
         actions: [
           IconButton(
             onPressed: clearChat,
@@ -125,18 +128,19 @@ class _AIChatScreenState extends State<AIChatScreen> {
               children: quickPrompts.map(quickPromptChip).toList(),
             ),
           ),
-
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(20),
               itemCount: messages.length + (isLoading ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == messages.length && isLoading) {
-                  return const Align(
+                  return Align(
                     alignment: Alignment.centerLeft,
                     child: Padding(
-                      padding: EdgeInsets.only(bottom: 12),
-                      child: CircularProgressIndicator(),
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                   );
                 }
@@ -145,10 +149,12 @@ class _AIChatScreenState extends State<AIChatScreen> {
               },
             ),
           ),
-
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(color: Color(0xFF1E293B)),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              border: const Border(top: BorderSide(color: Colors.white10)),
+            ),
             child: Row(
               children: [
                 Expanded(
@@ -157,23 +163,17 @@ class _AIChatScreenState extends State<AIChatScreen> {
                     minLines: 1,
                     maxLines: 4,
                     style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: "Ask a research question...",
-                      hintStyle: const TextStyle(color: Colors.white54),
-                      filled: true,
-                      fillColor: const Color(0xFF0F172A),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 CircleAvatar(
-                  backgroundColor: Colors.blueAccent,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   child: IconButton(
                     onPressed: isLoading ? null : () => sendMessage(),
-                    icon: const Icon(Icons.send, color: Colors.white),
+                    icon: const Icon(Icons.send, color: Colors.black),
                   ),
                 ),
               ],

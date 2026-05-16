@@ -44,7 +44,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1E293B),
+          backgroundColor: Theme.of(context).cardColor,
           title: const Text(
             "Reset App Data?",
             style: TextStyle(color: Colors.white),
@@ -93,7 +93,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
-    Color iconColor = Colors.blueAccent,
+    Color iconColor = Colors.white,
   }) {
     return ListTile(
       onTap: onTap,
@@ -108,14 +108,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget sectionContainer({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
-      appBar: AppBar(
-        title: const Text("Settings"),
-        backgroundColor: const Color(0xFF1E293B),
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(title: const Text("Settings")),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -130,11 +140,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 20),
 
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
-              borderRadius: BorderRadius.circular(18),
-            ),
+          sectionContainer(
             child: Column(
               children: [
                 SwitchListTile(
@@ -148,10 +154,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     "Dark Mode",
                     style: TextStyle(color: Colors.white),
                   ),
-                  secondary: const Icon(
-                    Icons.dark_mode,
-                    color: Colors.blueAccent,
-                  ),
+                  secondary: Icon(Icons.dark_mode, color: primary),
                 ),
                 const Divider(color: Colors.white12),
                 SwitchListTile(
@@ -165,10 +168,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     "Notifications",
                     style: TextStyle(color: Colors.white),
                   ),
-                  secondary: const Icon(
-                    Icons.notifications,
-                    color: Colors.blueAccent,
-                  ),
+                  secondary: Icon(Icons.notifications, color: primary),
                 ),
               ],
             ),
@@ -187,25 +187,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 20),
 
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
-              borderRadius: BorderRadius.circular(18),
-            ),
+          sectionContainer(
             child: Column(
               children: [
                 settingsTile(
                   icon: Icons.help_outline,
                   title: "Help & Guide",
-                  subtitle: "Learn how to use the app features",
+                  subtitle: "Learn how to use app features",
                   onTap: openHelp,
+                  iconColor: primary,
                 ),
                 const Divider(color: Colors.white12),
                 settingsTile(
-                  icon: Icons.info,
+                  icon: Icons.info_outline,
                   title: "About Project",
-                  subtitle: "View app purpose, features, and tech stack",
+                  subtitle: "View app information and tech stack",
                   onTap: openAboutProject,
+                  iconColor: primary,
                 ),
               ],
             ),
@@ -224,39 +222,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           const SizedBox(height: 20),
 
-          Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: ListTile(
+          sectionContainer(
+            child: settingsTile(
+              icon: Icons.delete_forever,
+              title: "Reset App Data",
+              subtitle: "Clear all local app data",
               onTap: confirmReset,
-              leading: const Icon(
-                Icons.delete_forever,
-                color: Colors.redAccent,
-              ),
-              title: const Text(
-                "Reset App Data",
-                style: TextStyle(color: Colors.white),
-              ),
-              subtitle: const Text(
-                "Clear account, summaries, experiments, notes, and profile data",
-                style: TextStyle(color: Colors.white70),
-              ),
+              iconColor: Colors.redAccent,
             ),
           ),
 
           const SizedBox(height: 30),
 
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(22),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
-              borderRadius: BorderRadius.circular(18),
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white10),
             ),
-            child: const Text(
-              "Research AI Assistant\nVersion 1.0.0",
-              style: TextStyle(color: Colors.white70, height: 1.5),
+            child: Column(
+              children: [
+                Text(
+                  "Research AI Assistant",
+                  style: TextStyle(
+                    color: primary,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  "Version 1.0.0",
+                  style: TextStyle(color: Colors.white70),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  "Built with Flutter ❤️",
+                  style: TextStyle(color: Colors.white54),
+                ),
+              ],
             ),
           ),
         ],

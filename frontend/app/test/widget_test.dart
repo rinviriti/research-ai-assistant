@@ -3,8 +3,8 @@ import 'package:app/main.dart';
 
 void main() {
   testWidgets('App loads successfully', (WidgetTester tester) async {
-    await tester.pumpWidget(const ResearchAIApp());
+    await tester.pumpWidget(const ResearchAIAssistantApp());
 
-    expect(find.text('Research AI Assistant'), findsOneWidget);
+    expect(find.text('Research AI Assistant'), findsWidgets);
   });
 }

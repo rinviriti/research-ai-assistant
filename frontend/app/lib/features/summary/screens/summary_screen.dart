@@ -80,13 +80,6 @@ class _SummaryScreenState extends State<SummaryScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    titleController.dispose();
-    abstractController.dispose();
-    super.dispose();
-  }
-
   Widget inputField({
     required String label,
     required TextEditingController controller,
@@ -96,23 +89,25 @@ class _SummaryScreenState extends State<SummaryScreen> {
       controller: controller,
       maxLines: maxLines,
       style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.white70),
-        filled: true,
-        fillColor: const Color(0xFF1E293B),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-      ),
+      decoration: InputDecoration(labelText: label),
     );
   }
 
   @override
+  void dispose() {
+    titleController.dispose();
+    abstractController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text("AI Summary"),
-        backgroundColor: const Color(0xFF1E293B),
         actions: [
           IconButton(
             icon: const Icon(Icons.bookmark),
@@ -131,12 +126,10 @@ class _SummaryScreenState extends State<SummaryScreen> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            const Icon(Icons.auto_awesome, color: Colors.blueAccent, size: 70),
-
+            Icon(Icons.auto_awesome, color: primary, size: 70),
             const SizedBox(height: 20),
-
             const Text(
-              "Real AI Research Summary",
+              "Research Summary Generator",
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white,
@@ -144,29 +137,21 @@ class _SummaryScreenState extends State<SummaryScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 10),
-
             const Text(
-              "Enter a paper title and abstract to generate a Gemini-powered research summary.",
+              "Enter a paper title and abstract to generate a structured research summary.",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70, height: 1.5),
             ),
-
             const SizedBox(height: 30),
-
             inputField(label: "Paper Title", controller: titleController),
-
             const SizedBox(height: 20),
-
             inputField(
               label: "Abstract",
               controller: abstractController,
               maxLines: 7,
             ),
-
             const SizedBox(height: 24),
-
             Row(
               children: [
                 Expanded(
@@ -176,7 +161,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                       onPressed: isLoading ? null : generateSummary,
                       icon: const Icon(Icons.psychology),
                       label: Text(
-                        isLoading ? "Generating..." : "Generate AI Summary",
+                        isLoading ? "Generating..." : "Generate Summary",
                       ),
                     ),
                   ),
@@ -191,34 +176,29 @@ class _SummaryScreenState extends State<SummaryScreen> {
                 ),
               ],
             ),
-
             const SizedBox(height: 30),
-
-            if (isLoading) const CircularProgressIndicator(),
-
+            if (isLoading) CircularProgressIndicator(color: primary),
             if (generatedSummary.isNotEmpty)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: Colors.white12),
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white10),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       "Generated Summary",
                       style: TextStyle(
-                        color: Colors.white,
+                        color: primary,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 16),
-
                     Text(
                       generatedSummary,
                       style: const TextStyle(
@@ -227,9 +207,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
                         fontSize: 15,
                       ),
                     ),
-
                     const SizedBox(height: 22),
-
                     SizedBox(
                       width: double.infinity,
                       height: 50,
