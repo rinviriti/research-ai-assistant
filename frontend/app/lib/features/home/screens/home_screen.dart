@@ -13,11 +13,13 @@ import '../../summary/screens/favorite_summary_screen.dart';
 import '../../experiment/screens/experiment_tracker_screen.dart';
 import '../../docs/screens/project_docs_screen.dart';
 import '../../notes/screens/research_notes_screen.dart';
+import '../../chat/screens/ai_chat_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   final List<Map<String, String>> features = const [
+    {"title": "AI Chat", "subtitle": "Ask research questions"},
     {"title": "Upload Paper", "subtitle": "Extract text from PDF papers"},
     {"title": "AI Summary", "subtitle": "Generate structured summaries"},
     {"title": "Experiment Tracker", "subtitle": "Track datasets and models"},
@@ -42,6 +44,10 @@ class HomeScreen extends StatelessWidget {
   }
 
   void openFeature(BuildContext context, String title) {
+    if (title == "AI Chat") {
+      openScreen(context, const AIChatScreen());
+    }
+
     if (title == "Upload Paper") {
       openScreen(context, const UploadPaperScreen());
     }
@@ -363,8 +369,16 @@ class HomeScreen extends StatelessWidget {
               children: [
                 quickAction(
                   context: context,
+                  icon: Icons.chat,
+                  title: "AI Chat",
+                  screen: const AIChatScreen(),
+                  color: Colors.greenAccent,
+                ),
+                const SizedBox(width: 12),
+                quickAction(
+                  context: context,
                   icon: Icons.auto_awesome,
-                  title: "New Summary",
+                  title: "Summary",
                   screen: const SummaryScreen(),
                   color: Colors.blueAccent,
                 ),
@@ -372,17 +386,9 @@ class HomeScreen extends StatelessWidget {
                 quickAction(
                   context: context,
                   icon: Icons.picture_as_pdf,
-                  title: "Upload PDF",
+                  title: "PDF",
                   screen: const UploadPaperScreen(),
                   color: Colors.redAccent,
-                ),
-                const SizedBox(width: 12),
-                quickAction(
-                  context: context,
-                  icon: Icons.note_add,
-                  title: "Add Note",
-                  screen: const ResearchNotesScreen(),
-                  color: Colors.purpleAccent,
                 ),
               ],
             ),
