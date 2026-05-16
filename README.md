@@ -45,87 +45,37 @@ Research AI Assistant helps students and researchers organize research workflows
 
 # Screenshots
 
-## First Page
+<table>
+<tr>
+<td align="center"><b>First Page</b><br><img src="frontend/app/assets/screenshots/firstpage.png" width="250"/></td>
+<td align="center"><b>Login Page</b><br><img src="frontend/app/assets/screenshots/loginpage.png" width="250"/></td>
+<td align="center"><b>Create Account</b><br><img src="frontend/app/assets/screenshots/createaccount_page.png" width="250"/></td>
+</tr>
 
-![First Page](frontend/app/assets/screenshots/firstpage.png)
+<tr>
+<td align="center"><b>Dashboard</b><br><img src="frontend/app/assets/screenshots/dashboard.png" width="250"/></td>
+<td align="center"><b>Features</b><br><img src="frontend/app/assets/screenshots/features.png" width="250"/></td>
+<td align="center"><b>AI Summary</b><br><img src="frontend/app/assets/screenshots/ai_summary.png" width="250"/></td>
+</tr>
 
----
+<tr>
+<td align="center"><b>AI Chat</b><br><img src="frontend/app/assets/screenshots/ai_chat.png" width="250"/></td>
+<td align="center"><b>Research Notes</b><br><img src="frontend/app/assets/screenshots/research_notes.png" width="250"/></td>
+<td align="center"><b>Experiment Tracker</b><br><img src="frontend/app/assets/screenshots/experiment_tracker.png" width="250"/></td>
+</tr>
 
-## Login Page
+<tr>
+<td align="center"><b>README Generator</b><br><img src="frontend/app/assets/screenshots/readme_generator.png" width="250"/></td>
+<td align="center"><b>Profile Page</b><br><img src="frontend/app/assets/screenshots/profile_page.png" width="250"/></td>
+<td align="center"><b>About Page</b><br><img src="frontend/app/assets/screenshots/about_page.png" width="250"/></td>
+</tr>
 
-![Login](frontend/app/assets/screenshots/loginpage.png)
-
----
-
-## Create Account Page
-
-![Create Account](frontend/app/assets/screenshots/createaccount_page.png)
-
----
-
-## Dashboard
-
-![Dashboard](frontend/app/assets/screenshots/dashboard.png)
-
----
-
-## Features Page
-
-![Features](frontend/app/assets/screenshots/features.png)
-
----
-
-## AI Summary Generator
-
-![Summary](frontend/app/assets/screenshots/ai_summary.png)
-
----
-
-## AI Research Chat
-
-![Chat](frontend/app/assets/screenshots/ai_chat.png)
-
----
-
-## Research Notes
-
-![Notes](frontend/app/assets/screenshots/research_notes.png)
-
----
-
-## Experiment Tracker
-
-![Experiments](frontend/app/assets/screenshots/experiment_tracker.png)
-
----
-
-## Project Docs Generator
-
-![Project Docs](frontend/app/assets/screenshots/readme_generator.png)
-
----
-
-## Profile Page
-
-![Profile](frontend/app/assets/screenshots/profile_page.png)
-
----
-
-## About Page
-
-![About](frontend/app/assets/screenshots/about_page.png)
-
----
-
-## About Page 2
-
-![About 2](frontend/app/assets/screenshots/about_page2.png)
-
----
-
-## Settings
-
-![Settings](frontend/app/assets/screenshots/settings.png)
+<tr>
+<td align="center"><b>About Page 2</b><br><img src="frontend/app/assets/screenshots/about_page2.png" width="250"/></td>
+<td align="center"><b>Settings</b><br><img src="frontend/app/assets/screenshots/settings.png" width="250"/></td>
+<td></td>
+</tr>
+</table>
 
 ---
 
