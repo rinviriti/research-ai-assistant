@@ -125,7 +125,7 @@ The AI Summary, AI Chat, and README Generator should therefore be considered AI-
 
 # Purpose of the Project
 
-This project was built as a flagship portfolio project to demonstrate:
+This project was built as a portfolio project to demonstrate:
 
 - Flutter app development
 - AI integration
