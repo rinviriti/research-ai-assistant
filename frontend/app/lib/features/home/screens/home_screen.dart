@@ -19,12 +19,14 @@ import '../../feed/screens/research_feed_screen.dart';
 import '../../research_profile/screens/research_profile_screen.dart';
 import '../../connections/screens/connections_screen.dart';
 import '../../matching/screens/swipe_matching_screen.dart';
+import '../../matching/screens/research_matches_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   final List<Map<String, String>> features = const [
     {"title": "Swipe Match", "subtitle": "Discover research collaborators"},
+    {"title": "Research Matches", "subtitle": "View interested researchers"},
     {"title": "Research Profile", "subtitle": "Professional academic identity"},
     {"title": "Connections", "subtitle": "Manage research network"},
     {"title": "Research Feed", "subtitle": "Share research updates"},
@@ -95,6 +97,9 @@ class HomeScreen extends StatelessWidget {
     if (title == "Swipe Match") {
       openScreen(context, const SwipeMatchingScreen());
     }
+    if (title == "Research Matches") {
+      openScreen(context, const ResearchMatchesScreen());
+    }
   }
 
   IconData featureIcon(String title) {
@@ -109,6 +114,7 @@ class HomeScreen extends StatelessWidget {
     if (title == "Project Docs") return Icons.description_outlined;
     if (title == "Connections") return Icons.handshake_outlined;
     if (title == "Swipe Match") return Icons.swipe_outlined;
+    if (title == "Research Matches") return Icons.favorite_border;
     return Icons.apps;
   }
 
@@ -125,6 +131,7 @@ class HomeScreen extends StatelessWidget {
     if (title == "Project Docs") return Colors.orangeAccent;
     if (title == "Connections") return Colors.lightGreenAccent;
     if (title == "Swipe Match") return Colors.pinkAccent;
+    if (title == "Research Matches") return Colors.pinkAccent;
     return Theme.of(context).colorScheme.primary;
   }
 
