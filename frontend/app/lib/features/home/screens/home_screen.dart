@@ -15,6 +15,7 @@ import '../../docs/screens/project_docs_screen.dart';
 import '../../notes/screens/research_notes_screen.dart';
 import '../../chat/screens/ai_chat_screen.dart';
 import '../../researchers/screens/researcher_screen.dart';
+import '../../feed/screens/research_feed_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -22,6 +23,7 @@ class HomeScreen extends StatelessWidget {
   final List<Map<String, String>> features = const [
     {"title": "AI Chat", "subtitle": "Ask research questions"},
     {"title": "Find Researchers", "subtitle": "Match with collaborators"},
+    {"title": "Research Feed", "subtitle": "Share research updates"},
     {"title": "Upload Paper", "subtitle": "Extract text from PDF papers"},
     {"title": "AI Summary", "subtitle": "Generate structured summaries"},
     {"title": "Experiment Tracker", "subtitle": "Track datasets and models"},
@@ -71,6 +73,9 @@ class HomeScreen extends StatelessWidget {
     if (title == "Project Docs") {
       openScreen(context, const ProjectDocsScreen());
     }
+    if (title == "Research Feed") {
+      openScreen(context, const ResearchFeedScreen());
+    }
   }
 
   IconData featureIcon(String title) {
@@ -81,7 +86,7 @@ class HomeScreen extends StatelessWidget {
     if (title == "Experiment Tracker") return Icons.science_outlined;
     if (title == "Research Notes") return Icons.note_alt_outlined;
     if (title == "Project Docs") return Icons.description_outlined;
-
+    if (title == "Research Feed") return Icons.dynamic_feed_outlined;
     return Icons.apps;
   }
 
@@ -93,7 +98,7 @@ class HomeScreen extends StatelessWidget {
     if (title == "Research Notes") return Colors.purpleAccent;
     if (title == "Project Docs") return Colors.orangeAccent;
     if (title == "AI Chat") return Colors.tealAccent;
-
+    if (title == "Research Feed") return Colors.cyanAccent;
     return Theme.of(context).colorScheme.primary;
   }
 
