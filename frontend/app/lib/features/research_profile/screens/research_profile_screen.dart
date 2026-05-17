@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/research_profile_model.dart';
 import '../../../services/research_profile_service.dart';
+import 'edit_research_profile_screen.dart';
 
 class ResearchProfileScreen extends StatefulWidget {
   const ResearchProfileScreen({super.key});
@@ -215,12 +216,17 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
         title: const Text("Research Profile"),
         actions: [
           IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("Edit profile screen coming next."),
+            onPressed: () async {
+              final updated = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EditResearchProfileScreen(),
                 ),
               );
+
+              if (updated == true) {
+                loadProfile();
+              }
             },
             icon: const Icon(Icons.edit),
           ),

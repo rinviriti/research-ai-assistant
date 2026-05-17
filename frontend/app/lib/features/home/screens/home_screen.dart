@@ -22,10 +22,10 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   final List<Map<String, String>> features = const [
-    {"title": "AI Chat", "subtitle": "Ask research questions"},
-    {"title": "Find Researchers", "subtitle": "Match with collaborators"},
     {"title": "Research Profile", "subtitle": "Professional academic identity"},
     {"title": "Research Feed", "subtitle": "Share research updates"},
+    {"title": "Find Researchers", "subtitle": "Match with collaborators"},
+    {"title": "AI Chat", "subtitle": "Ask research questions"},
     {"title": "Upload Paper", "subtitle": "Extract text from PDF papers"},
     {"title": "AI Summary", "subtitle": "Generate structured summaries"},
     {"title": "Experiment Tracker", "subtitle": "Track datasets and models"},
@@ -50,10 +50,20 @@ class HomeScreen extends StatelessWidget {
   }
 
   void openFeature(BuildContext context, String title) {
-    if (title == "AI Chat") openScreen(context, const AIChatScreen());
+    if (title == "Research Profile") {
+      openScreen(context, const ResearchProfileScreen());
+    }
+
+    if (title == "Research Feed") {
+      openScreen(context, const ResearchFeedScreen());
+    }
 
     if (title == "Find Researchers") {
       openScreen(context, const ResearcherScreen());
+    }
+
+    if (title == "AI Chat") {
+      openScreen(context, const AIChatScreen());
     }
 
     if (title == "Upload Paper") {
@@ -75,41 +85,34 @@ class HomeScreen extends StatelessWidget {
     if (title == "Project Docs") {
       openScreen(context, const ProjectDocsScreen());
     }
-    if (title == "Research Feed") {
-      openScreen(context, const ResearchFeedScreen());
-    }
-    if (title == "Research Profile") {
-      openScreen(context, const ResearchProfileScreen());
-    }
   }
 
   IconData featureIcon(String title) {
-    if (title == "AI Chat") return Icons.chat_bubble_outline;
+    if (title == "Research Profile") return Icons.account_circle_outlined;
+    if (title == "Research Feed") return Icons.dynamic_feed_outlined;
     if (title == "Find Researchers") return Icons.people_alt_outlined;
+    if (title == "AI Chat") return Icons.chat_bubble_outline;
     if (title == "Upload Paper") return Icons.picture_as_pdf_outlined;
     if (title == "AI Summary") return Icons.auto_awesome;
     if (title == "Experiment Tracker") return Icons.science_outlined;
     if (title == "Research Notes") return Icons.note_alt_outlined;
     if (title == "Project Docs") return Icons.description_outlined;
-    if (title == "Research Feed") return Icons.dynamic_feed_outlined;
-    if (title == "Research Profile") {
-      return Icons.account_circle_outlined;
-    }
+
     return Icons.apps;
   }
 
   Color featureColor(BuildContext context, String title) {
-    if (title == "Find Researchers")
+    if (title == "Research Profile") return Colors.indigoAccent;
+    if (title == "Research Feed") return Colors.cyanAccent;
+    if (title == "Find Researchers") {
       return Theme.of(context).colorScheme.secondary;
+    }
+    if (title == "AI Chat") return Colors.tealAccent;
     if (title == "Upload Paper") return Colors.redAccent;
     if (title == "Experiment Tracker") return Colors.greenAccent;
     if (title == "Research Notes") return Colors.purpleAccent;
     if (title == "Project Docs") return Colors.orangeAccent;
-    if (title == "AI Chat") return Colors.tealAccent;
-    if (title == "Research Feed") return Colors.cyanAccent;
-    if (title == "Research Profile") {
-      return Colors.indigoAccent;
-    }
+
     return Theme.of(context).colorScheme.primary;
   }
 
@@ -167,9 +170,7 @@ class HomeScreen extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 8),
-
           Text(
             AuthService.currentUser ?? "Researcher",
             style: TextStyle(
@@ -178,24 +179,20 @@ class HomeScreen extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-
           const SizedBox(height: 18),
-
           const Text(
-            "Summarize papers, track experiments, save research ideas, and discover researchers with similar interests.",
+            "Build your academic identity, share research updates, find collaborators, summarize papers, and organize your research workflow.",
             style: TextStyle(color: Colors.white70, height: 1.55, fontSize: 15),
           ),
-
           const SizedBox(height: 20),
-
           Row(
             children: [
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: () =>
-                      openScreen(context, const ResearcherScreen()),
-                  icon: const Icon(Icons.people_alt),
-                  label: const Text("Find Researchers"),
+                      openScreen(context, const ResearchProfileScreen()),
+                  icon: const Icon(Icons.account_circle_outlined),
+                  label: const Text("My Profile"),
                 ),
               ),
               const SizedBox(width: 12),
@@ -203,8 +200,9 @@ class HomeScreen extends StatelessWidget {
                 height: 50,
                 width: 52,
                 child: ElevatedButton(
-                  onPressed: () => openScreen(context, const AIChatScreen()),
-                  child: const Icon(Icons.chat),
+                  onPressed: () =>
+                      openScreen(context, const ResearchFeedScreen()),
+                  child: const Icon(Icons.dynamic_feed_outlined),
                 ),
               ),
             ],
@@ -435,7 +433,7 @@ class HomeScreen extends StatelessWidget {
               SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  "No recent activity yet. Start by generating a summary or adding a research note.",
+                  "No recent activity yet. Start by creating your research profile, posting an update, or generating a summary.",
                   style: TextStyle(color: Colors.white60, height: 1.4),
                 ),
               ),
@@ -593,7 +591,7 @@ class HomeScreen extends StatelessWidget {
 
             sectionTitle(
               "Quick Actions",
-              subtitle: "Jump directly into your most important workflows.",
+              subtitle: "Jump directly into your academic social workflows.",
             ),
 
             const SizedBox(height: 16),
@@ -602,26 +600,26 @@ class HomeScreen extends StatelessWidget {
               children: [
                 quickAction(
                   context: context,
+                  icon: Icons.account_circle_outlined,
+                  title: "Profile",
+                  screen: const ResearchProfileScreen(),
+                  color: Colors.indigoAccent,
+                ),
+                const SizedBox(width: 12),
+                quickAction(
+                  context: context,
+                  icon: Icons.dynamic_feed_outlined,
+                  title: "Feed",
+                  screen: const ResearchFeedScreen(),
+                  color: Colors.cyanAccent,
+                ),
+                const SizedBox(width: 12),
+                quickAction(
+                  context: context,
                   icon: Icons.people_alt_outlined,
-                  title: "Researchers",
+                  title: "Match",
                   screen: const ResearcherScreen(),
                   color: secondary,
-                ),
-                const SizedBox(width: 12),
-                quickAction(
-                  context: context,
-                  icon: Icons.auto_awesome,
-                  title: "Summary",
-                  screen: const SummaryScreen(),
-                  color: primary,
-                ),
-                const SizedBox(width: 12),
-                quickAction(
-                  context: context,
-                  icon: Icons.chat_bubble_outline,
-                  title: "AI Chat",
-                  screen: const AIChatScreen(),
-                  color: Colors.tealAccent,
                 ),
               ],
             ),
@@ -639,7 +637,7 @@ class HomeScreen extends StatelessWidget {
             sectionTitle(
               "Research Tools",
               subtitle:
-                  "Everything you need to organize and grow your research work.",
+                  "Everything you need to organize, socialize, and grow your research work.",
             ),
 
             const SizedBox(height: 16),
