@@ -17,12 +17,14 @@ import '../../chat/screens/ai_chat_screen.dart';
 import '../../researchers/screens/researcher_screen.dart';
 import '../../feed/screens/research_feed_screen.dart';
 import '../../research_profile/screens/research_profile_screen.dart';
+import '../../connections/screens/connections_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   final List<Map<String, String>> features = const [
     {"title": "Research Profile", "subtitle": "Professional academic identity"},
+    {"title": "Connections", "subtitle": "Manage research network"},
     {"title": "Research Feed", "subtitle": "Share research updates"},
     {"title": "Find Researchers", "subtitle": "Match with collaborators"},
     {"title": "AI Chat", "subtitle": "Ask research questions"},
@@ -85,6 +87,9 @@ class HomeScreen extends StatelessWidget {
     if (title == "Project Docs") {
       openScreen(context, const ProjectDocsScreen());
     }
+    if (title == "Connections") {
+      openScreen(context, const ConnectionsScreen());
+    }
   }
 
   IconData featureIcon(String title) {
@@ -97,7 +102,7 @@ class HomeScreen extends StatelessWidget {
     if (title == "Experiment Tracker") return Icons.science_outlined;
     if (title == "Research Notes") return Icons.note_alt_outlined;
     if (title == "Project Docs") return Icons.description_outlined;
-
+    if (title == "Connections") return Icons.handshake_outlined;
     return Icons.apps;
   }
 
@@ -112,7 +117,7 @@ class HomeScreen extends StatelessWidget {
     if (title == "Experiment Tracker") return Colors.greenAccent;
     if (title == "Research Notes") return Colors.purpleAccent;
     if (title == "Project Docs") return Colors.orangeAccent;
-
+    if (title == "Connections") return Colors.lightGreenAccent;
     return Theme.of(context).colorScheme.primary;
   }
 

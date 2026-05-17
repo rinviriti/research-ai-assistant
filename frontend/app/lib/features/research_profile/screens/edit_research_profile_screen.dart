@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../constants/research_options.dart';
 import '../../../models/research_profile_model.dart';
 import '../../../services/research_profile_service.dart';
 
@@ -20,14 +21,15 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
   final locationController = TextEditingController();
   final lookingForController = TextEditingController();
 
-  final interestsController = TextEditingController();
-  final skillsController = TextEditingController();
   final publicationsController = TextEditingController();
   final projectsController = TextEditingController();
 
   final googleScholarController = TextEditingController();
   final githubController = TextEditingController();
   final linkedInController = TextEditingController();
+
+  List<String> selectedInterests = [];
+  List<String> selectedSkills = [];
 
   @override
   void initState() {
@@ -50,8 +52,9 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     locationController.text = profile.location;
     lookingForController.text = profile.lookingFor;
 
-    interestsController.text = profile.researchInterests.join(", ");
-    skillsController.text = profile.skills.join(", ");
+    selectedInterests = List<String>.from(profile.researchInterests);
+    selectedSkills = List<String>.from(profile.skills);
+
     publicationsController.text = profile.publications.join(", ");
     projectsController.text = profile.projects.join(", ");
 
@@ -59,9 +62,7 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     githubController.text = profile.github;
     linkedInController.text = profile.linkedIn;
 
-    if (mounted) {
-      setState(() {});
-    }
+    if (mounted) setState(() {});
   }
 
   List<String> splitList(String text) {
@@ -70,6 +71,26 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
         .map((item) => item.trim())
         .where((item) => item.isNotEmpty)
         .toList();
+  }
+
+  void toggleInterest(String interest) {
+    setState(() {
+      if (selectedInterests.contains(interest)) {
+        selectedInterests.remove(interest);
+      } else {
+        selectedInterests.add(interest);
+      }
+    });
+  }
+
+  void toggleSkill(String skill) {
+    setState(() {
+      if (selectedSkills.contains(skill)) {
+        selectedSkills.remove(skill);
+      } else {
+        selectedSkills.add(skill);
+      }
+    });
   }
 
   Future<void> saveProfile() async {
@@ -83,6 +104,22 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
       return;
     }
 
+    if (selectedInterests.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please select at least one research interest."),
+        ),
+      );
+      return;
+    }
+
+    if (selectedSkills.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select at least one skill.")),
+      );
+      return;
+    }
+
     final updatedProfile = ResearchProfileModel(
       name: name,
       email: email,
@@ -91,8 +128,8 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
       bio: bioController.text.trim(),
       location: locationController.text.trim(),
       lookingFor: lookingForController.text.trim(),
-      researchInterests: splitList(interestsController.text),
-      skills: splitList(skillsController.text),
+      researchInterests: selectedInterests,
+      skills: selectedSkills,
       publications: splitList(publicationsController.text),
       projects: splitList(projectsController.text),
       googleScholar: googleScholarController.text.trim(),
@@ -176,9 +213,112 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
           const SizedBox(width: 12),
           const Expanded(
             child: Text(
-              "For interests, skills, publications, and projects, separate each item using commas. Example: Medical Imaging, Deep Learning, Flutter",
+              "Select research interests and skills from the options below. These selections will be used later for collaborator matching, supervisor discovery, and research recommendation scoring.",
               style: TextStyle(color: Colors.white70, height: 1.45),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget selectableOption({
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8, bottom: 10),
+      child: FilterChip(
+        label: Text(label),
+        selected: selected,
+        showCheckmark: true,
+        checkmarkColor: Colors.black,
+        backgroundColor: Theme.of(context).cardColor,
+        selectedColor: primary,
+        side: BorderSide(color: selected ? primary : Colors.white12),
+        labelStyle: TextStyle(
+          color: selected ? Colors.black : Colors.white70,
+          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+        ),
+        onSelected: (_) => onTap(),
+      ),
+    );
+  }
+
+  Widget optionSelector({
+    required String title,
+    required String subtitle,
+    required List<String> options,
+    required List<String> selectedItems,
+    required void Function(String value) onToggle,
+    required IconData icon,
+  }) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 11,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: primary.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(color: primary.withOpacity(0.35)),
+                ),
+                child: Text(
+                  "${selectedItems.length} selected",
+                  style: TextStyle(
+                    color: primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            subtitle,
+            style: const TextStyle(color: Colors.white60, height: 1.4),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            children: options.map((option) {
+              return selectableOption(
+                label: option,
+                selected: selectedItems.contains(option),
+                onTap: () => onToggle(option),
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -194,8 +334,6 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     bioController.dispose();
     locationController.dispose();
     lookingForController.dispose();
-    interestsController.dispose();
-    skillsController.dispose();
     publicationsController.dispose();
     projectsController.dispose();
     googleScholarController.dispose();
@@ -246,7 +384,7 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    "This profile will later be used for researcher matching, collaboration requests, and academic networking.",
+                    "Your profile will power researcher matching, academic networking, and future AI recommendation features.",
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white70, height: 1.45),
                   ),
@@ -309,28 +447,31 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
 
             sectionTitle(
               "Research Matching Data",
-              "These fields will power compatibility score and future swipe matching.",
+              "Choose options instead of typing everything manually.",
             ),
 
-            inputField(
-              label: "Research Interests",
-              controller: interestsController,
-              maxLines: 3,
-              hint: "Medical Imaging, Deep Learning, NLP",
+            optionSelector(
+              title: "Research Interests",
+              subtitle:
+                  "Select topics that best describe your academic interests.",
+              options: ResearchOptions.interests,
+              selectedItems: selectedInterests,
+              onToggle: toggleInterest,
               icon: Icons.psychology_outlined,
             ),
 
-            inputField(
-              label: "Skills",
-              controller: skillsController,
-              maxLines: 3,
-              hint: "Flutter, Python, PyTorch, Research Writing",
+            optionSelector(
+              title: "Skills",
+              subtitle: "Select your technical and research-related strengths.",
+              options: ResearchOptions.skills,
+              selectedItems: selectedSkills,
+              onToggle: toggleSkill,
               icon: Icons.code,
             ),
 
             sectionTitle(
               "Academic Work",
-              "Add publications and projects to strengthen your profile.",
+              "Use commas to separate publications and projects.",
             ),
 
             inputField(
@@ -351,7 +492,7 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
 
             sectionTitle(
               "Academic Links",
-              "Add links that help other researchers evaluate your background.",
+              "Add links that help others evaluate your research background.",
             ),
 
             inputField(
