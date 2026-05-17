@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/swipe_match_model.dart';
-import '../../../services/research_messaging_service.dart';
 import '../../../services/swipe_match_service.dart';
+import '../../../services/research_messaging_service.dart';
 import '../../messaging/screens/research_chat_detail_screen.dart';
 
 class ResearchMatchesScreen extends StatefulWidget {
@@ -38,9 +38,7 @@ class _ResearchMatchesScreenState extends State<ResearchMatchesScreen> {
               ),
             ),
           ),
-
           const SizedBox(width: 14),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,16 +51,12 @@ class _ResearchMatchesScreenState extends State<ResearchMatchesScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 5),
-
                 Text(
                   match.university,
                   style: const TextStyle(color: Colors.white60, fontSize: 13),
                 ),
-
                 const SizedBox(height: 10),
-
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 11,
@@ -85,7 +79,6 @@ class _ResearchMatchesScreenState extends State<ResearchMatchesScreen> {
               ],
             ),
           ),
-
           IconButton(
             onPressed: () {
               ResearchMessagingService.createThread(
@@ -122,9 +115,7 @@ class _ResearchMatchesScreenState extends State<ResearchMatchesScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.favorite_border, color: primary, size: 84),
-
             const SizedBox(height: 20),
-
             const Text(
               "No matches yet",
               textAlign: TextAlign.center,
@@ -134,9 +125,7 @@ class _ResearchMatchesScreenState extends State<ResearchMatchesScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 10),
-
             const Text(
               "Use Swipe Match to show interest in researchers, supervisors, and collaborators. Your interested matches will appear here.",
               textAlign: TextAlign.center,
@@ -183,16 +172,12 @@ class _ResearchMatchesScreenState extends State<ResearchMatchesScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 4),
-
                 const Text("Matches", style: TextStyle(color: Colors.white60)),
               ],
             ),
           ),
-
           Container(width: 1, height: 45, color: Colors.white12),
-
           Expanded(
             child: Column(
               children: [
@@ -204,9 +189,7 @@ class _ResearchMatchesScreenState extends State<ResearchMatchesScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 4),
-
                 const Text(
                   "Avg Score",
                   style: TextStyle(color: Colors.white60),
@@ -239,18 +222,13 @@ class _ResearchMatchesScreenState extends State<ResearchMatchesScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
                 const Text(
-                  "Researchers you liked through swipe matching. These can later become collaborators, friends, or supervisors.",
+                  "Researchers you liked through swipe matching. These can later become collaborators, research friends, or supervisors.",
                   style: TextStyle(color: Colors.white70, height: 1.5),
                 ),
-
                 const SizedBox(height: 24),
-
                 statsHeader(),
-
                 ...matches.map(matchCard),
               ],
             ),

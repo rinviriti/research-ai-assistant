@@ -20,6 +20,7 @@ import '../../research_profile/screens/research_profile_screen.dart';
 import '../../connections/screens/connections_screen.dart';
 import '../../matching/screens/swipe_matching_screen.dart';
 import '../../matching/screens/research_matches_screen.dart';
+import '../../messaging/screens/research_messages_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -29,6 +30,7 @@ class HomeScreen extends StatelessWidget {
     {"title": "Research Matches", "subtitle": "View interested researchers"},
     {"title": "Research Profile", "subtitle": "Professional academic identity"},
     {"title": "Connections", "subtitle": "Manage research network"},
+    {"title": "Research Messages", "subtitle": "Chat with matched researchers"},
     {"title": "Research Feed", "subtitle": "Share research updates"},
     {"title": "Find Researchers", "subtitle": "Match with collaborators"},
     {"title": "AI Chat", "subtitle": "Ask research questions"},
@@ -100,6 +102,9 @@ class HomeScreen extends StatelessWidget {
     if (title == "Research Matches") {
       openScreen(context, const ResearchMatchesScreen());
     }
+    if (title == "Research Messages") {
+      openScreen(context, const ResearchMessagesScreen());
+    }
   }
 
   IconData featureIcon(String title) {
@@ -115,6 +120,7 @@ class HomeScreen extends StatelessWidget {
     if (title == "Connections") return Icons.handshake_outlined;
     if (title == "Swipe Match") return Icons.swipe_outlined;
     if (title == "Research Matches") return Icons.favorite_border;
+    if (title == "Research Messages") return Icons.forum_outlined;
     return Icons.apps;
   }
 
@@ -132,6 +138,7 @@ class HomeScreen extends StatelessWidget {
     if (title == "Connections") return Colors.lightGreenAccent;
     if (title == "Swipe Match") return Colors.pinkAccent;
     if (title == "Research Matches") return Colors.pinkAccent;
+    if (title == "Research Messages") return Colors.blueAccent;
     return Theme.of(context).colorScheme.primary;
   }
 

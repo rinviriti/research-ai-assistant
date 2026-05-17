@@ -1,66 +1,33 @@
 import '../models/chat_thread_model.dart';
 import '../models/research_message_model.dart';
-import 'swipe_match_service.dart';
 
 class ResearchMessagingService {
   static final List<ResearchMessageModel> messages = [];
 
-  static final List<ChatThreadModel> manualThreads = [];
+  static final List<ChatThreadModel> threads = [];
 
   static void createThread({
     required String researcherName,
     required String university,
   }) {
-    final exists = manualThreads.any(
+    final exists = threads.any(
       (thread) => thread.researcherName == researcherName,
     );
 
     if (exists) return;
 
-    manualThreads.add(
+    threads.add(
       ChatThreadModel(
         researcherName: researcherName,
         university: university,
         lastMessage: "Start a research conversation",
-        timeAgo: "New chat",
+        timeAgo: "New",
       ),
     );
   }
 
   static List<ChatThreadModel> getThreads() {
-    final matchThreads = SwipeMatchService.matches.map((match) {
-      final threadMessages = getMessages(match.researcherName);
-
-      return ChatThreadModel(
-        researcherName: match.researcherName,
-        university: match.university,
-        lastMessage: threadMessages.isEmpty
-            ? "Start a research conversation"
-            : threadMessages.last.message,
-        timeAgo: threadMessages.isEmpty
-            ? "New match"
-            : threadMessages.last.timeAgo,
-      );
-    }).toList();
-
-    final allThreads = [...manualThreads, ...matchThreads];
-
-    final uniqueThreads = <String, ChatThreadModel>{};
-
-    for (final thread in allThreads) {
-      uniqueThreads[thread.researcherName] = ChatThreadModel(
-        researcherName: thread.researcherName,
-        university: thread.university,
-        lastMessage: getMessages(thread.researcherName).isEmpty
-            ? thread.lastMessage
-            : getMessages(thread.researcherName).last.message,
-        timeAgo: getMessages(thread.researcherName).isEmpty
-            ? thread.timeAgo
-            : getMessages(thread.researcherName).last.timeAgo,
-      );
-    }
-
-    return uniqueThreads.values.toList();
+    return threads;
   }
 
   static List<ResearchMessageModel> getMessages(String researcherName) {
@@ -78,7 +45,7 @@ class ResearchMessagingService {
         researcherName: researcherName,
         message: message,
         isMe: true,
-        timeAgo: "Just now",
+        timeAgo: "Now",
       ),
     );
 
@@ -86,9 +53,9 @@ class ResearchMessagingService {
       ResearchMessageModel(
         researcherName: researcherName,
         message:
-            "Thanks for reaching out. I would be interested to discuss possible research collaboration.",
+            "Thanks for your message. I would love to discuss this research topic further.",
         isMe: false,
-        timeAgo: "Just now",
+        timeAgo: "Now",
       ),
     );
   }
