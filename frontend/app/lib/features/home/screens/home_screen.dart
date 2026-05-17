@@ -14,12 +14,14 @@ import '../../experiment/screens/experiment_tracker_screen.dart';
 import '../../docs/screens/project_docs_screen.dart';
 import '../../notes/screens/research_notes_screen.dart';
 import '../../chat/screens/ai_chat_screen.dart';
+import '../../researchers/screens/researcher_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   final List<Map<String, String>> features = const [
     {"title": "AI Chat", "subtitle": "Ask research questions"},
+    {"title": "Find Researchers", "subtitle": "Match with collaborators"},
     {"title": "Upload Paper", "subtitle": "Extract text from PDF papers"},
     {"title": "AI Summary", "subtitle": "Generate structured summaries"},
     {"title": "Experiment Tracker", "subtitle": "Track datasets and models"},
@@ -45,17 +47,155 @@ class HomeScreen extends StatelessWidget {
 
   void openFeature(BuildContext context, String title) {
     if (title == "AI Chat") openScreen(context, const AIChatScreen());
-    if (title == "Upload Paper") openScreen(context, const UploadPaperScreen());
-    if (title == "AI Summary") openScreen(context, const SummaryScreen());
+
+    if (title == "Find Researchers") {
+      openScreen(context, const ResearcherScreen());
+    }
+
+    if (title == "Upload Paper") {
+      openScreen(context, const UploadPaperScreen());
+    }
+
+    if (title == "AI Summary") {
+      openScreen(context, const SummaryScreen());
+    }
+
     if (title == "Experiment Tracker") {
       openScreen(context, const ExperimentTrackerScreen());
     }
+
     if (title == "Research Notes") {
       openScreen(context, const ResearchNotesScreen());
     }
+
     if (title == "Project Docs") {
       openScreen(context, const ProjectDocsScreen());
     }
+  }
+
+  IconData featureIcon(String title) {
+    if (title == "AI Chat") return Icons.chat_bubble_outline;
+    if (title == "Find Researchers") return Icons.people_alt_outlined;
+    if (title == "Upload Paper") return Icons.picture_as_pdf_outlined;
+    if (title == "AI Summary") return Icons.auto_awesome;
+    if (title == "Experiment Tracker") return Icons.science_outlined;
+    if (title == "Research Notes") return Icons.note_alt_outlined;
+    if (title == "Project Docs") return Icons.description_outlined;
+
+    return Icons.apps;
+  }
+
+  Color featureColor(BuildContext context, String title) {
+    if (title == "Find Researchers")
+      return Theme.of(context).colorScheme.secondary;
+    if (title == "Upload Paper") return Colors.redAccent;
+    if (title == "Experiment Tracker") return Colors.greenAccent;
+    if (title == "Research Notes") return Colors.purpleAccent;
+    if (title == "Project Docs") return Colors.orangeAccent;
+    if (title == "AI Chat") return Colors.tealAccent;
+
+    return Theme.of(context).colorScheme.primary;
+  }
+
+  Widget sectionTitle(String title, {String? subtitle}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: const TextStyle(color: Colors.white60, height: 1.4),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget heroCard(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final secondary = Theme.of(context).colorScheme.secondary;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            primary.withOpacity(0.28),
+            secondary.withOpacity(0.18),
+            Theme.of(context).cardColor,
+          ],
+        ),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Welcome back 👋",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            AuthService.currentUser ?? "Researcher",
+            style: TextStyle(
+              color: primary,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+
+          const SizedBox(height: 18),
+
+          const Text(
+            "Summarize papers, track experiments, save research ideas, and discover researchers with similar interests.",
+            style: TextStyle(color: Colors.white70, height: 1.55, fontSize: 15),
+          ),
+
+          const SizedBox(height: 20),
+
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () =>
+                      openScreen(context, const ResearcherScreen()),
+                  icon: const Icon(Icons.people_alt),
+                  label: const Text("Find Researchers"),
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                height: 50,
+                width: 52,
+                child: ElevatedButton(
+                  onPressed: () => openScreen(context, const AIChatScreen()),
+                  child: const Icon(Icons.chat),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Widget statCard({
@@ -68,32 +208,32 @@ class HomeScreen extends StatelessWidget {
   }) {
     return Expanded(
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         onTap: () => openScreen(context, screen),
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(color: Colors.white10),
           ),
           child: Column(
             children: [
-              Icon(icon, color: iconColor, size: 32),
+              Icon(icon, color: iconColor, size: 31),
               const SizedBox(height: 10),
               Text(
                 count,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 24,
+                  fontSize: 23,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 5),
               Text(
                 label,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
               ),
             ],
           ),
@@ -111,18 +251,26 @@ class HomeScreen extends StatelessWidget {
   }) {
     return Expanded(
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         onTap: () => openScreen(context, screen),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(color: Colors.white10),
           ),
           child: Column(
             children: [
-              Icon(icon, color: color, size: 32),
+              Container(
+                height: 46,
+                width: 46,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
               const SizedBox(height: 10),
               Text(
                 title,
@@ -130,6 +278,7 @@ class HomeScreen extends StatelessWidget {
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
+                  fontSize: 13,
                 ),
               ),
             ],
@@ -148,19 +297,27 @@ class HomeScreen extends StatelessWidget {
     required Widget screen,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       onTap: () => openScreen(context, screen),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(color: Colors.white10),
         ),
         child: Row(
           children: [
-            Icon(icon, color: iconColor, size: 28),
+            Container(
+              height: 44,
+              width: 44,
+              decoration: BoxDecoration(
+                color: iconColor.withOpacity(0.14),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Icon(icon, color: iconColor, size: 25),
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -180,14 +337,14 @@ class HomeScreen extends StatelessWidget {
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
+                    style: const TextStyle(color: Colors.white60, fontSize: 13),
                   ),
                 ],
               ),
             ),
             const Icon(
               Icons.arrow_forward_ios,
-              color: Colors.white38,
+              color: Colors.white30,
               size: 16,
             ),
           ],
@@ -198,6 +355,8 @@ class HomeScreen extends StatelessWidget {
 
   List<Widget> buildRecentActivities(BuildContext context) {
     final activities = <Widget>[];
+    final primary = Theme.of(context).colorScheme.primary;
+    final secondary = Theme.of(context).colorScheme.secondary;
 
     if (SummaryService.savedSummaries.isNotEmpty) {
       final latest = SummaryService.savedSummaries.last;
@@ -205,8 +364,8 @@ class HomeScreen extends StatelessWidget {
       activities.add(
         recentActivityItem(
           context: context,
-          icon: Icons.description,
-          iconColor: Theme.of(context).colorScheme.primary,
+          icon: Icons.description_outlined,
+          iconColor: primary,
           title: "Latest Summary",
           subtitle: latest.title,
           screen: const SavedSummaryScreen(),
@@ -220,7 +379,7 @@ class HomeScreen extends StatelessWidget {
       activities.add(
         recentActivityItem(
           context: context,
-          icon: Icons.science,
+          icon: Icons.science_outlined,
           iconColor: Colors.greenAccent,
           title: "Latest Experiment",
           subtitle: latest.experimentName,
@@ -235,8 +394,8 @@ class HomeScreen extends StatelessWidget {
       activities.add(
         recentActivityItem(
           context: context,
-          icon: Icons.note_alt,
-          iconColor: Theme.of(context).colorScheme.secondary,
+          icon: Icons.note_alt_outlined,
+          iconColor: secondary,
           title: "Latest Note",
           subtitle: latest.title,
           screen: const ResearchNotesScreen(),
@@ -251,18 +410,81 @@ class HomeScreen extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white10),
           ),
-          child: const Text(
-            "No recent activity yet.",
-            style: TextStyle(color: Colors.white70),
+          child: const Row(
+            children: [
+              Icon(Icons.history, color: Colors.white38),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  "No recent activity yet. Start by generating a summary or adding a research note.",
+                  style: TextStyle(color: Colors.white60, height: 1.4),
+                ),
+              ),
+            ],
           ),
         ),
       );
     }
 
     return activities;
+  }
+
+  Widget featureCard(BuildContext context, Map<String, String> feature) {
+    final title = feature["title"]!;
+    final subtitle = feature["subtitle"]!;
+    final color = featureColor(context, title);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: () => openFeature(context, title),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 48,
+              width: 48,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(featureIcon(title), color: color, size: 28),
+            ),
+            const Spacer(),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white60,
+                fontSize: 13,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -280,46 +502,36 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Dashboard"),
+        title: const Text("Research Hub"),
         actions: [
           IconButton(
+            tooltip: "Logout",
             onPressed: () => logout(context),
             icon: const Icon(Icons.logout),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Welcome back 👋",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            Text(
-              AuthService.currentUser ?? "Unknown User",
-              style: TextStyle(
-                color: primary,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            heroCard(context),
 
             const SizedBox(height: 28),
+
+            sectionTitle(
+              "Research Overview",
+              subtitle: "Your saved research activity at a glance.",
+            ),
+
+            const SizedBox(height: 16),
 
             Row(
               children: [
                 statCard(
                   context: context,
-                  icon: Icons.description,
+                  icon: Icons.description_outlined,
                   iconColor: primary,
                   count: totalSummaries.toString(),
                   label: "Summaries",
@@ -328,7 +540,7 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 statCard(
                   context: context,
-                  icon: Icons.star,
+                  icon: Icons.star_outline,
                   iconColor: Colors.amber,
                   count: favoriteSummaries.toString(),
                   label: "Favorites",
@@ -343,7 +555,7 @@ class HomeScreen extends StatelessWidget {
               children: [
                 statCard(
                   context: context,
-                  icon: Icons.science,
+                  icon: Icons.science_outlined,
                   iconColor: Colors.greenAccent,
                   count: totalExperiments.toString(),
                   label: "Experiments",
@@ -352,7 +564,7 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 statCard(
                   context: context,
-                  icon: Icons.note_alt,
+                  icon: Icons.note_alt_outlined,
                   iconColor: secondary,
                   count: totalNotes.toString(),
                   label: "Notes",
@@ -363,13 +575,9 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 28),
 
-            const Text(
+            sectionTitle(
               "Quick Actions",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              subtitle: "Jump directly into your most important workflows.",
             ),
 
             const SizedBox(height: 16),
@@ -378,10 +586,10 @@ class HomeScreen extends StatelessWidget {
               children: [
                 quickAction(
                   context: context,
-                  icon: Icons.chat,
-                  title: "AI Chat",
-                  screen: const AIChatScreen(),
-                  color: Colors.greenAccent,
+                  icon: Icons.people_alt_outlined,
+                  title: "Researchers",
+                  screen: const ResearcherScreen(),
+                  color: secondary,
                 ),
                 const SizedBox(width: 12),
                 quickAction(
@@ -394,24 +602,17 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 quickAction(
                   context: context,
-                  icon: Icons.picture_as_pdf,
-                  title: "PDF",
-                  screen: const UploadPaperScreen(),
-                  color: Colors.redAccent,
+                  icon: Icons.chat_bubble_outline,
+                  title: "AI Chat",
+                  screen: const AIChatScreen(),
+                  color: Colors.tealAccent,
                 ),
               ],
             ),
 
             const SizedBox(height: 28),
 
-            const Text(
-              "Recent Activity",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            sectionTitle("Recent Activity"),
 
             const SizedBox(height: 16),
 
@@ -419,13 +620,10 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 28),
 
-            const Text(
-              "Features",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+            sectionTitle(
+              "Research Tools",
+              subtitle:
+                  "Everything you need to organize and grow your research work.",
             ),
 
             const SizedBox(height: 16),
@@ -438,46 +636,10 @@ class HomeScreen extends StatelessWidget {
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 1.05,
+                childAspectRatio: 1.03,
               ),
               itemBuilder: (context, index) {
-                final feature = features[index];
-
-                return InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: () => openFeature(context, feature["title"]!),
-                  child: Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white10),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.auto_awesome, color: primary, size: 34),
-                        const Spacer(),
-                        Text(
-                          feature["title"]!,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          feature["subtitle"]!,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
+                return featureCard(context, features[index]);
               },
             ),
           ],
