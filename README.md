@@ -18,6 +18,8 @@ Research AI Assistant helps students and researchers organize research workflows
 - Local persistent storage
 - Modern dark UI
 - Gemini API integration with local fallback system
+- Researcher matching based on shared academic interests
+- Local prototype for supervisor/collaborator discovery
 
 ---
 
@@ -103,6 +105,10 @@ The AI Summary, AI Chat, and README Generator should therefore be considered AI-
 - [x] Profile and settings
 - [x] Local persistence
 - [x] Modern UI design
+- [x] Local researcher matching prototype
+- [x] Research compatibility score
+- [ ] Swipe-based supervisor/collaborator matching
+- [ ] Research social feed
 - [ ] Firebase backend
 - [ ] Cloud synchronization
 - [ ] APK/Web deployment
