@@ -1,11 +1,11 @@
 class CommentModel {
-  final String postAuthor;
+  final String postId;
   final String commenter;
   final String comment;
   final String timeAgo;
 
   CommentModel({
-    required this.postAuthor,
+    required this.postId,
     required this.commenter,
     required this.comment,
     required this.timeAgo,

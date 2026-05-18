@@ -40,9 +40,12 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
   Future<void> loadCurrentProfile() async {
     await ResearchProfileService.loadProfile();
 
-    final profile =
-        ResearchProfileService.currentProfile ??
-        ResearchProfileService.defaultProfile;
+    final profile = ResearchProfileService.currentProfile;
+
+    if (profile == null) {
+      setState(() {});
+      return;
+    }
 
     nameController.text = profile.name;
     emailController.text = profile.email;
@@ -142,7 +145,7 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Research profile updated successfully 🚀")),
+      const SnackBar(content: Text("Research profile saved successfully 🚀")),
     );
 
     Navigator.pop(context, true);
@@ -213,7 +216,7 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
           const SizedBox(width: 12),
           const Expanded(
             child: Text(
-              "Select research interests and skills from the options below. These selections will be used later for collaborator matching, supervisor discovery, and research recommendation scoring.",
+              "Select research interests and skills from the options below. These selections will be used for collaborator matching, supervisor discovery, and research recommendation scoring.",
               style: TextStyle(color: Colors.white70, height: 1.45),
             ),
           ),
@@ -345,10 +348,17 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
+    final hasExistingProfile = ResearchProfileService.currentProfile != null;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(title: const Text("Edit Research Profile")),
+      appBar: AppBar(
+        title: Text(
+          hasExistingProfile
+              ? "Edit Research Profile"
+              : "Create Research Profile",
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -373,10 +383,12 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    "Build Your Academic Identity",
+                  Text(
+                    hasExistingProfile
+                        ? "Update Your Academic Identity"
+                        : "Create Your Academic Identity",
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 23,
                       fontWeight: FontWeight.bold,
@@ -521,7 +533,11 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
               child: ElevatedButton.icon(
                 onPressed: saveProfile,
                 icon: const Icon(Icons.save),
-                label: const Text("Save Research Profile"),
+                label: Text(
+                  hasExistingProfile
+                      ? "Update Research Profile"
+                      : "Create Research Profile",
+                ),
               ),
             ),
 

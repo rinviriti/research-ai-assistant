@@ -3,6 +3,7 @@ import '../models/post_model.dart';
 class PostService {
   static final List<PostModel> posts = [
     PostModel(
+      postId: "post_001",
       author: "Rinvi Jaman Riti",
       university: "Daffodil International University",
       content:
@@ -12,8 +13,8 @@ class PostService {
       timeAgo: "2h ago",
       likes: 12,
     ),
-
     PostModel(
+      postId: "post_002",
       author: "Dr. Aiko Tanaka",
       university: "University of Tokyo",
       content:
@@ -23,8 +24,8 @@ class PostService {
       timeAgo: "5h ago",
       likes: 31,
     ),
-
     PostModel(
+      postId: "post_003",
       author: "Md. Rahat Hossain",
       university: "BUET",
       content:
@@ -35,4 +36,24 @@ class PostService {
       likes: 7,
     ),
   ];
+
+  static void addPost(PostModel post) {
+    posts.insert(0, post);
+  }
+
+  static void toggleLike(String postId) {
+    final index = posts.indexWhere((post) => post.postId == postId);
+
+    if (index == -1) return;
+
+    final post = posts[index];
+
+    if (post.isLiked) {
+      post.likes--;
+      post.isLiked = false;
+    } else {
+      post.likes++;
+      post.isLiked = true;
+    }
+  }
 }

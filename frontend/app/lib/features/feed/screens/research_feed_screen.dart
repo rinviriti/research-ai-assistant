@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../models/comment_model.dart';
 import '../../../models/post_model.dart';
-import '../../../services/post_service.dart';
 import '../../../services/comment_service.dart';
-import '../../../services/connection_service.dart';
+import '../../../services/post_service.dart';
+import '../../../services/notification_service.dart';
 
 class ResearchFeedScreen extends StatefulWidget {
   const ResearchFeedScreen({super.key});
@@ -14,7 +15,10 @@ class ResearchFeedScreen extends StatefulWidget {
 
 class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
   final postController = TextEditingController();
-  String selectedType = "Research Question";
+  final tagController = TextEditingController();
+  final commentController = TextEditingController();
+
+  String selectedPostType = "Research Question";
 
   final List<String> postTypes = const [
     "Research Question",
@@ -22,179 +26,179 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
     "Publication",
     "Dataset Request",
     "Collaboration Request",
+    "Experiment Result",
   ];
 
-  void addPost() {
+  @override
+  void dispose() {
+    postController.dispose();
+    tagController.dispose();
+    commentController.dispose();
+    super.dispose();
+  }
+
+  List<String> parseTags(String text) {
+    final tags = text
+        .split(",")
+        .map((tag) => tag.trim())
+        .where((tag) => tag.isNotEmpty)
+        .toList();
+
+    if (tags.isEmpty) {
+      return ["Research"];
+    }
+
+    return tags;
+  }
+
+  void createPost() {
     final content = postController.text.trim();
 
     if (content.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please write something research-related."),
-        ),
+        const SnackBar(content: Text("Please write a research-related post.")),
       );
       return;
     }
 
-    setState(() {
-      PostService.posts.insert(
-        0,
-        PostModel(
-          author: "Rinvi Jaman Riti",
-          university: "Daffodil International University",
-          content: content,
-          type: selectedType,
-          tags: ["Research", "AI"],
-          timeAgo: "Just now",
-          likes: 0,
-        ),
-      );
+    final post = PostModel(
+      postId: DateTime.now().millisecondsSinceEpoch.toString(),
+      author: "You",
+      university: "Your University",
+      content: content,
+      type: selectedPostType,
+      tags: parseTags(tagController.text),
+      timeAgo: "Just now",
+      likes: 0,
+      isLiked: false,
+    );
 
+    setState(() {
+      PostService.addPost(post);
       postController.clear();
-      selectedType = "Research Question";
+      tagController.clear();
+      selectedPostType = "Research Question";
     });
-  }
 
-  void connectUser(PostModel post) {
-    if (ConnectionService.isConnected(post.author)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Request already sent to ${post.author}")),
-      );
-      return;
-    }
-
-    setState(() {
-      ConnectionService.sendRequest(
-        researcherName: post.author,
-        university: post.university,
-      );
-    });
+    NotificationService.addNotification(
+      title: "Research Post Created",
+      body: "Your new research post was added to the feed.",
+      type: "post",
+    );
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Connection request sent to ${post.author}")),
+      const SnackBar(content: Text("Research post published successfully 🚀")),
     );
   }
 
-  void openComments(PostModel post) {
-    final commentController = TextEditingController();
-    final comments = CommentService.getCommentsForPost(post.author);
+  void showCommentSheet(PostModel post) {
+    commentController.clear();
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, modalSetState) {
-            final updatedComments = CommentService.getCommentsForPost(
-              post.author,
-            );
+          builder: (context, setModalState) {
+            final comments = CommentService.getCommentsForPost(post.postId);
+
+            Widget commentTile(CommentModel comment) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      comment.commenter,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      comment.comment,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      comment.timeAgo,
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
 
             return Padding(
               padding: EdgeInsets.only(
                 left: 20,
                 right: 20,
-                top: 22,
+                top: 20,
                 bottom: MediaQuery.of(context).viewInsets.bottom + 20,
               ),
               child: SizedBox(
                 height: MediaQuery.of(context).size.height * 0.72,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Container(
+                      width: 55,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     const Text(
-                      "Comments",
+                      "Research Discussion",
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 24,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
-                    const SizedBox(height: 6),
-
+                    const SizedBox(height: 8),
                     Text(
                       post.content,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white60),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white60,
+                        height: 1.4,
+                      ),
                     ),
-
                     const SizedBox(height: 20),
-
                     Expanded(
-                      child: updatedComments.isEmpty
+                      child: comments.isEmpty
                           ? const Center(
                               child: Text(
                                 "No comments yet. Start the discussion.",
                                 style: TextStyle(color: Colors.white60),
                               ),
                             )
-                          : ListView.builder(
-                              itemCount: updatedComments.length,
-                              itemBuilder: (context, index) {
-                                final comment = updatedComments[index];
-
-                                return Container(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).cardColor,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: Colors.white10),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      CircleAvatar(
-                                        backgroundColor: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                        child: Text(
-                                          comment.commenter.substring(0, 1),
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              "${comment.commenter} • ${comment.timeAgo}",
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              comment.comment,
-                                              style: const TextStyle(
-                                                color: Colors.white70,
-                                                height: 1.4,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
+                          : ListView(
+                              children: comments.map(commentTile).toList(),
                             ),
                     ),
-
-                    const SizedBox(height: 12),
-
+                    const SizedBox(height: 14),
                     Row(
                       children: [
                         Expanded(
@@ -206,7 +210,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 12),
                         CircleAvatar(
                           backgroundColor: Theme.of(
                             context,
@@ -218,14 +222,14 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
                               if (text.isEmpty) return;
 
                               CommentService.addComment(
-                                postAuthor: post.author,
-                                commenter: "Rinvi Jaman Riti",
+                                postId: post.postId,
+                                commenter: "You",
                                 comment: text,
                               );
 
                               commentController.clear();
 
-                              modalSetState(() {});
+                              setModalState(() {});
                               setState(() {});
                             },
                             icon: const Icon(Icons.send, color: Colors.black),
@@ -243,70 +247,36 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
     );
   }
 
-  Color typeColor(String type) {
-    if (type == "Publication") return Colors.greenAccent;
-    if (type == "Ongoing Research") return Colors.blueAccent;
-    if (type == "Dataset Request") return Colors.orangeAccent;
-    if (type == "Collaboration Request") return Colors.purpleAccent;
-    return Theme.of(context).colorScheme.primary;
-  }
-
-  Widget tagChip(String tag) {
-    final primary = Theme.of(context).colorScheme.primary;
-
-    return Container(
-      margin: const EdgeInsets.only(right: 8, bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-      decoration: BoxDecoration(
-        color: primary.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: primary.withOpacity(0.35)),
-      ),
-      child: Text(
-        "#$tag",
-        style: TextStyle(
-          color: primary,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  Widget createPostCard() {
+  Widget composerCard() {
     final primary = Theme.of(context).colorScheme.primary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 22),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(26),
         border: Border.all(color: Colors.white10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Share Research Update",
+            "Create Research Post",
             style: TextStyle(
               color: Colors.white,
               fontSize: 21,
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 8),
-
           const Text(
-            "Post research questions, ongoing work, publications, dataset requests, or collaboration ideas.",
+            "Ask a question, share ongoing work, request datasets, or post publication updates.",
             style: TextStyle(color: Colors.white60, height: 1.4),
           ),
-
           const SizedBox(height: 18),
-
           DropdownButtonFormField<String>(
-            value: selectedType,
+            value: selectedPostType,
             dropdownColor: Theme.of(context).cardColor,
             decoration: const InputDecoration(labelText: "Post Type"),
             items: postTypes.map((type) {
@@ -317,37 +287,45 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
             }).toList(),
             onChanged: (value) {
               if (value == null) return;
-              setState(() => selectedType = value);
+
+              setState(() {
+                selectedPostType = value;
+              });
             },
           ),
-
           const SizedBox(height: 16),
-
           TextField(
             controller: postController,
-            maxLines: 4,
+            maxLines: 5,
             style: const TextStyle(color: Colors.white),
             decoration: const InputDecoration(
-              hintText: "What research are you working on?",
+              hintText:
+                  "What research question, update, or collaboration idea do you want to share?",
             ),
           ),
-
+          const SizedBox(height: 16),
+          TextField(
+            controller: tagController,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: "Tags",
+              hintText: "Medical Imaging, Deep Learning, Dataset",
+              prefixIcon: Icon(Icons.tag),
+            ),
+          ),
           const SizedBox(height: 18),
-
           SizedBox(
             width: double.infinity,
-            height: 52,
+            height: 54,
             child: ElevatedButton.icon(
-              onPressed: addPost,
-              icon: const Icon(Icons.post_add),
-              label: const Text("Post Research Update"),
+              onPressed: createPost,
+              icon: const Icon(Icons.send),
+              label: const Text("Publish Research Post"),
             ),
           ),
-
-          const SizedBox(height: 8),
-
+          const SizedBox(height: 10),
           Text(
-            "Only research-related posts are encouraged.",
+            "Only research-related content is encouraged.",
             style: TextStyle(color: primary.withOpacity(0.8), fontSize: 12),
           ),
         ],
@@ -355,181 +333,217 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
     );
   }
 
-  Widget postCard(PostModel post) {
-    final color = typeColor(post.type);
-    final commentCount = CommentService.getCommentsForPost(post.author).length;
-    final connected = ConnectionService.isConnected(post.author);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 18),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+  Widget actionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required Color color,
+  }) {
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircleAvatar(
-                radius: 25,
-                backgroundColor: color,
-                child: Text(
-                  post.author.substring(0, 1),
-                  style: const TextStyle(
-                    color: Colors.black,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 13),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      post.author,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      "${post.university} • ${post.timeAgo}",
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 11,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: color.withOpacity(0.4)),
-                ),
-                child: Text(
-                  post.type,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+              Icon(icon, color: color, size: 22),
+              const SizedBox(width: 7),
+              Text(
+                label,
+                style: TextStyle(color: color, fontWeight: FontWeight.w600),
               ),
             ],
           ),
-
-          const SizedBox(height: 16),
-
-          Text(
-            post.content,
-            style: const TextStyle(
-              color: Colors.white70,
-              height: 1.55,
-              fontSize: 14.5,
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          Wrap(children: post.tags.map(tagChip).toList()),
-
-          const SizedBox(height: 14),
-
-          Row(
-            children: [
-              InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () {
-                  setState(() {
-                    post.likes++;
-                  });
-                },
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.thumb_up_alt_outlined,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      post.likes.toString(),
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 24),
-
-              InkWell(
-                onTap: () => openComments(post),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.comment_outlined,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      commentCount == 0 ? "Comment" : "$commentCount Comments",
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 24),
-
-              InkWell(
-                onTap: () => connectUser(post),
-                child: Row(
-                  children: [
-                    Icon(
-                      connected ? Icons.check_circle : Icons.person_add_alt_1,
-                      color: connected
-                          ? Colors.greenAccent
-                          : Theme.of(context).colorScheme.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      connected ? "Pending" : "Connect",
-                      style: TextStyle(
-                        color: connected ? Colors.greenAccent : Colors.white70,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  @override
-  void dispose() {
-    postController.dispose();
-    super.dispose();
+  Widget tagChip(String tag) {
+    return Container(
+      margin: const EdgeInsets.only(right: 8, bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.blueAccent.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: Text(
+        "#$tag",
+        style: const TextStyle(
+          color: Colors.blueAccent,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget feedCard(PostModel post) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final commentCount = CommentService.commentCount(post.postId);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 27,
+                  backgroundColor: primary,
+                  child: Text(
+                    post.author.substring(0, 1),
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        post.author,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 17,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        post.university,
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: primary.withOpacity(0.14),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        post.type,
+                        style: TextStyle(
+                          color: primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      post.timeAgo,
+                      style: const TextStyle(
+                        color: Colors.white38,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            Text(
+              post.content,
+              style: const TextStyle(
+                color: Colors.white70,
+                height: 1.55,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 18),
+            Wrap(children: post.tags.map(tagChip).toList()),
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Icon(
+                  Icons.thumb_up,
+                  color: post.isLiked ? Colors.blueAccent : Colors.white38,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  "${post.likes}",
+                  style: const TextStyle(color: Colors.white60),
+                ),
+                const SizedBox(width: 18),
+                const Icon(
+                  Icons.comment_outlined,
+                  color: Colors.white38,
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  "$commentCount comments",
+                  style: const TextStyle(color: Colors.white60),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            const Divider(color: Colors.white10),
+            Row(
+              children: [
+                actionButton(
+                  icon: post.isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+                  label: post.isLiked ? "Liked" : "Like",
+                  color: post.isLiked ? Colors.blueAccent : Colors.white60,
+                  onTap: () {
+                    setState(() {
+                      PostService.toggleLike(post.postId);
+                    });
+                  },
+                ),
+                actionButton(
+                  icon: Icons.comment_outlined,
+                  label: "Comment",
+                  color: Colors.white60,
+                  onTap: () {
+                    showCommentSheet(post);
+                  },
+                ),
+                actionButton(
+                  icon: Icons.share_outlined,
+                  label: "Share",
+                  color: Colors.white60,
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Share feature coming soon."),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -543,26 +557,21 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
         padding: const EdgeInsets.all(20),
         children: [
           const Text(
-            "Research Social Feed",
+            "Academic Research Community",
             style: TextStyle(
               color: Colors.white,
-              fontSize: 30,
+              fontSize: 31,
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 10),
-
           const Text(
-            "Share ongoing research, ask academic questions, discover collaborators, and follow research updates.",
+            "Discover publications, research questions, ongoing experiments, and collaborate with researchers worldwide.",
             style: TextStyle(color: Colors.white70, height: 1.5),
           ),
-
           const SizedBox(height: 24),
-
-          createPostCard(),
-
-          ...posts.map(postCard),
+          composerCard(),
+          ...posts.map(feedCard),
         ],
       ),
     );

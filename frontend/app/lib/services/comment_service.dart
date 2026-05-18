@@ -4,20 +4,18 @@ import 'notification_service.dart';
 class CommentService {
   static final List<CommentModel> comments = [];
 
-  static List<CommentModel> getCommentsForPost(String postAuthor) {
-    return comments
-        .where((comment) => comment.postAuthor == postAuthor)
-        .toList();
+  static List<CommentModel> getCommentsForPost(String postId) {
+    return comments.where((comment) => comment.postId == postId).toList();
   }
 
   static void addComment({
-    required String postAuthor,
+    required String postId,
     required String commenter,
     required String comment,
   }) {
     comments.add(
       CommentModel(
-        postAuthor: postAuthor,
+        postId: postId,
         commenter: commenter,
         comment: comment,
         timeAgo: "Just now",
@@ -31,27 +29,11 @@ class CommentService {
     );
   }
 
-  static void deleteComment(CommentModel commentModel) {
-    comments.remove(commentModel);
-
-    NotificationService.addNotification(
-      title: "Comment Removed",
-      body: "A research discussion comment was removed.",
-      type: "comment",
-    );
-  }
-
-  static int commentCount(String postAuthor) {
-    return comments.where((comment) => comment.postAuthor == postAuthor).length;
+  static int commentCount(String postId) {
+    return comments.where((comment) => comment.postId == postId).length;
   }
 
   static void clearComments() {
     comments.clear();
-
-    NotificationService.addNotification(
-      title: "Comments Cleared",
-      body: "All research discussion comments were cleared.",
-      type: "comment",
-    );
   }
 }

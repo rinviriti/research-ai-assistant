@@ -1,53 +1,56 @@
-import 'package:shared_preferences/shared_preferences.dart';
-
 class AuthService {
   static String? currentUser;
+  static String? currentEmail;
 
-  static Future<void> registerUser(
-    String name,
-    String email,
-    String password,
-  ) async {
-    final prefs = await SharedPreferences.getInstance();
+  static final List<Map<String, String>> users = [];
 
-    await prefs.setString('name', name);
-    await prefs.setString('email', email);
-    await prefs.setString('password', password);
-    await prefs.setBool('loggedIn', true);
+  static Future<bool> register({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 500));
 
-    currentUser = name;
-  }
+    final alreadyExists = users.any((user) => user["email"] == email);
 
-  static Future<bool> loginUser(String email, String password) async {
-    final prefs = await SharedPreferences.getInstance();
-
-    final storedEmail = prefs.getString('email');
-    final storedPassword = prefs.getString('password');
-    final storedName = prefs.getString('name');
-
-    final isValid = email == storedEmail && password == storedPassword;
-
-    if (isValid) {
-      currentUser = storedName;
-      await prefs.setBool('loggedIn', true);
+    if (alreadyExists) {
+      return false;
     }
 
-    return isValid;
+    users.add({"name": name, "email": email, "password": password});
+
+    currentUser = name;
+    currentEmail = email;
+
+    return true;
   }
 
-  static Future<bool> isLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
+  static Future<bool> login({
+    required String email,
+    required String password,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 500));
 
-    final loggedIn = prefs.getBool('loggedIn') ?? false;
-    currentUser = prefs.getString('name');
+    try {
+      final user = users.firstWhere(
+        (user) => user["email"] == email && user["password"] == password,
+      );
 
-    return loggedIn && currentUser != null;
+      currentUser = user["name"];
+      currentEmail = user["email"];
+
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    await prefs.setBool('loggedIn', false);
     currentUser = null;
+    currentEmail = null;
+  }
+
+  static bool isLoggedIn() {
+    return currentUser != null;
   }
 }
