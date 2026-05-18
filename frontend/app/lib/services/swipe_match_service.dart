@@ -1,5 +1,6 @@
 import '../models/researcher_model.dart';
 import '../models/swipe_match_model.dart';
+import 'notification_service.dart';
 import 'researcher_service.dart';
 
 class SwipeMatchService {
@@ -35,6 +36,12 @@ class SwipeMatchService {
   static void likeResearcher(ResearcherModel researcher) {
     final score = calculateMatchScore(researcher);
 
+    final alreadyMatched = matches.any(
+      (match) => match.researcherName == researcher.name,
+    );
+
+    if (alreadyMatched) return;
+
     matches.add(
       SwipeMatchModel(
         researcherName: researcher.name,
@@ -43,14 +50,29 @@ class SwipeMatchService {
         status: "interested",
       ),
     );
+
+    NotificationService.addNotification(
+      title: "New Research Match",
+      body:
+          "You showed interest in ${researcher.name} from ${researcher.university}.",
+      type: "match",
+    );
   }
 
   static void skipResearcher(ResearcherModel researcher) {
-    skippedResearchers.add(researcher.name);
+    if (!skippedResearchers.contains(researcher.name)) {
+      skippedResearchers.add(researcher.name);
+    }
   }
 
   static void resetSwipes() {
     matches.clear();
     skippedResearchers.clear();
+
+    NotificationService.addNotification(
+      title: "Swipe Matching Reset",
+      body: "Your research swipe matching activity has been reset.",
+      type: "match",
+    );
   }
 }

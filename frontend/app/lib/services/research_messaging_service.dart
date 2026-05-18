@@ -1,9 +1,9 @@
 import '../models/chat_thread_model.dart';
 import '../models/research_message_model.dart';
+import 'notification_service.dart';
 
 class ResearchMessagingService {
   static final List<ResearchMessageModel> messages = [];
-
   static final List<ChatThreadModel> threads = [];
 
   static void createThread({
@@ -27,7 +27,20 @@ class ResearchMessagingService {
   }
 
   static List<ChatThreadModel> getThreads() {
-    return threads;
+    return threads.map((thread) {
+      final threadMessages = getMessages(thread.researcherName);
+
+      if (threadMessages.isEmpty) {
+        return thread;
+      }
+
+      return ChatThreadModel(
+        researcherName: thread.researcherName,
+        university: thread.university,
+        lastMessage: threadMessages.last.message,
+        timeAgo: threadMessages.last.timeAgo,
+      );
+    }).toList();
   }
 
   static List<ResearchMessageModel> getMessages(String researcherName) {
@@ -57,6 +70,23 @@ class ResearchMessagingService {
         isMe: false,
         timeAgo: "Now",
       ),
+    );
+
+    NotificationService.addNotification(
+      title: "New Research Message",
+      body: "Conversation updated with $researcherName.",
+      type: "message",
+    );
+  }
+
+  static void clearMessages() {
+    messages.clear();
+    threads.clear();
+
+    NotificationService.addNotification(
+      title: "Messages Cleared",
+      body: "All local research conversations have been cleared.",
+      type: "message",
     );
   }
 }

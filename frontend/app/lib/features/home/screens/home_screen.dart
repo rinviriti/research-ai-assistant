@@ -4,6 +4,7 @@ import '../../../services/auth_service.dart';
 import '../../../services/summary_service.dart';
 import '../../../services/experiment_service.dart';
 import '../../../services/note_service.dart';
+import '../../../services/notification_service.dart';
 
 import '../../auth/screens/login_screen.dart';
 import '../../paper/screens/upload_paper_screen.dart';
@@ -21,16 +22,18 @@ import '../../connections/screens/connections_screen.dart';
 import '../../matching/screens/swipe_matching_screen.dart';
 import '../../matching/screens/research_matches_screen.dart';
 import '../../messaging/screens/research_messages_screen.dart';
+import '../../notifications/screens/notifications_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   final List<Map<String, String>> features = const [
+    {"title": "Notifications", "subtitle": "Research activity alerts"},
     {"title": "Swipe Match", "subtitle": "Discover research collaborators"},
     {"title": "Research Matches", "subtitle": "View interested researchers"},
+    {"title": "Research Messages", "subtitle": "Chat with matched researchers"},
     {"title": "Research Profile", "subtitle": "Professional academic identity"},
     {"title": "Connections", "subtitle": "Manage research network"},
-    {"title": "Research Messages", "subtitle": "Chat with matched researchers"},
     {"title": "Research Feed", "subtitle": "Share research updates"},
     {"title": "Find Researchers", "subtitle": "Match with collaborators"},
     {"title": "AI Chat", "subtitle": "Ask research questions"},
@@ -58,8 +61,28 @@ class HomeScreen extends StatelessWidget {
   }
 
   void openFeature(BuildContext context, String title) {
+    if (title == "Notifications") {
+      openScreen(context, const NotificationsScreen());
+    }
+
+    if (title == "Swipe Match") {
+      openScreen(context, const SwipeMatchingScreen());
+    }
+
+    if (title == "Research Matches") {
+      openScreen(context, const ResearchMatchesScreen());
+    }
+
+    if (title == "Research Messages") {
+      openScreen(context, const ResearchMessagesScreen());
+    }
+
     if (title == "Research Profile") {
       openScreen(context, const ResearchProfileScreen());
+    }
+
+    if (title == "Connections") {
+      openScreen(context, const ConnectionsScreen());
     }
 
     if (title == "Research Feed") {
@@ -93,22 +116,15 @@ class HomeScreen extends StatelessWidget {
     if (title == "Project Docs") {
       openScreen(context, const ProjectDocsScreen());
     }
-    if (title == "Connections") {
-      openScreen(context, const ConnectionsScreen());
-    }
-    if (title == "Swipe Match") {
-      openScreen(context, const SwipeMatchingScreen());
-    }
-    if (title == "Research Matches") {
-      openScreen(context, const ResearchMatchesScreen());
-    }
-    if (title == "Research Messages") {
-      openScreen(context, const ResearchMessagesScreen());
-    }
   }
 
   IconData featureIcon(String title) {
+    if (title == "Notifications") return Icons.notifications_none;
+    if (title == "Swipe Match") return Icons.swipe_outlined;
+    if (title == "Research Matches") return Icons.favorite_border;
+    if (title == "Research Messages") return Icons.forum_outlined;
     if (title == "Research Profile") return Icons.account_circle_outlined;
+    if (title == "Connections") return Icons.handshake_outlined;
     if (title == "Research Feed") return Icons.dynamic_feed_outlined;
     if (title == "Find Researchers") return Icons.people_alt_outlined;
     if (title == "AI Chat") return Icons.chat_bubble_outline;
@@ -117,15 +133,17 @@ class HomeScreen extends StatelessWidget {
     if (title == "Experiment Tracker") return Icons.science_outlined;
     if (title == "Research Notes") return Icons.note_alt_outlined;
     if (title == "Project Docs") return Icons.description_outlined;
-    if (title == "Connections") return Icons.handshake_outlined;
-    if (title == "Swipe Match") return Icons.swipe_outlined;
-    if (title == "Research Matches") return Icons.favorite_border;
-    if (title == "Research Messages") return Icons.forum_outlined;
+
     return Icons.apps;
   }
 
   Color featureColor(BuildContext context, String title) {
+    if (title == "Notifications") return Colors.orangeAccent;
+    if (title == "Swipe Match") return Colors.pinkAccent;
+    if (title == "Research Matches") return Colors.pinkAccent;
+    if (title == "Research Messages") return Colors.blueAccent;
     if (title == "Research Profile") return Colors.indigoAccent;
+    if (title == "Connections") return Colors.lightGreenAccent;
     if (title == "Research Feed") return Colors.cyanAccent;
     if (title == "Find Researchers") {
       return Theme.of(context).colorScheme.secondary;
@@ -135,10 +153,7 @@ class HomeScreen extends StatelessWidget {
     if (title == "Experiment Tracker") return Colors.greenAccent;
     if (title == "Research Notes") return Colors.purpleAccent;
     if (title == "Project Docs") return Colors.orangeAccent;
-    if (title == "Connections") return Colors.lightGreenAccent;
-    if (title == "Swipe Match") return Colors.pinkAccent;
-    if (title == "Research Matches") return Colors.pinkAccent;
-    if (title == "Research Messages") return Colors.blueAccent;
+
     return Theme.of(context).colorScheme.primary;
   }
 
@@ -168,6 +183,7 @@ class HomeScreen extends StatelessWidget {
   Widget heroCard(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     final secondary = Theme.of(context).colorScheme.secondary;
+    final unread = NotificationService.unreadCount();
 
     return Container(
       width: double.infinity,
@@ -188,15 +204,64 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Welcome back 👋",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 30,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  "Welcome back 👋",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              InkWell(
+                borderRadius: BorderRadius.circular(18),
+                onTap: () => openScreen(context, const NotificationsScreen()),
+                child: Stack(
+                  children: [
+                    Container(
+                      height: 46,
+                      width: 46,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: const Icon(
+                        Icons.notifications_none,
+                        color: Colors.white,
+                      ),
+                    ),
+                    if (unread > 0)
+                      Positioned(
+                        right: 5,
+                        top: 5,
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: const BoxDecoration(
+                            color: Colors.orangeAccent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            unread.toString(),
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
+
           const SizedBox(height: 8),
+
           Text(
             AuthService.currentUser ?? "Researcher",
             style: TextStyle(
@@ -205,12 +270,16 @@ class HomeScreen extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
+
           const SizedBox(height: 18),
+
           const Text(
             "Build your academic identity, share research updates, find collaborators, summarize papers, and organize your research workflow.",
             style: TextStyle(color: Colors.white70, height: 1.55, fontSize: 15),
           ),
+
           const SizedBox(height: 20),
+
           Row(
             children: [
               Expanded(
@@ -443,6 +512,21 @@ class HomeScreen extends StatelessWidget {
       );
     }
 
+    if (NotificationService.notifications.isNotEmpty) {
+      final latest = NotificationService.notifications.first;
+
+      activities.add(
+        recentActivityItem(
+          context: context,
+          icon: Icons.notifications_none,
+          iconColor: Colors.orangeAccent,
+          title: latest.title,
+          subtitle: latest.body,
+          screen: const NotificationsScreen(),
+        ),
+      );
+    }
+
     if (activities.isEmpty) {
       activities.add(
         Container(
@@ -535,6 +619,7 @@ class HomeScreen extends StatelessWidget {
         .length;
     final totalExperiments = ExperimentService.experiments.length;
     final totalNotes = NoteService.notes.length;
+    final unreadNotifications = NotificationService.unreadCount();
 
     final primary = Theme.of(context).colorScheme.primary;
     final secondary = Theme.of(context).colorScheme.secondary;
@@ -544,6 +629,36 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Research Hub"),
         actions: [
+          Stack(
+            children: [
+              IconButton(
+                tooltip: "Notifications",
+                onPressed: () =>
+                    openScreen(context, const NotificationsScreen()),
+                icon: const Icon(Icons.notifications_none),
+              ),
+              if (unreadNotifications > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.orangeAccent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      unreadNotifications.toString(),
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             tooltip: "Logout",
             onPressed: () => logout(context),
@@ -642,10 +757,10 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 quickAction(
                   context: context,
-                  icon: Icons.people_alt_outlined,
-                  title: "Match",
-                  screen: const ResearcherScreen(),
-                  color: secondary,
+                  icon: Icons.notifications_none,
+                  title: "Alerts",
+                  screen: const NotificationsScreen(),
+                  color: Colors.orangeAccent,
                 ),
               ],
             ),
