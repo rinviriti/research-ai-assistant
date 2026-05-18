@@ -3,6 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../models/notification_model.dart';
 import '../../../services/notification_service.dart';
 
+import '../../feed/screens/research_feed_screen.dart';
+import '../../matching/screens/research_matches_screen.dart';
+import '../../messaging/screens/research_messages_screen.dart';
+import '../../connections/screens/connections_screen.dart';
+
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
@@ -31,6 +36,42 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Theme.of(context).colorScheme.primary;
   }
 
+  void openScreen(Widget screen) {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
+  }
+
+  void openNotification(NotificationModel notification) {
+    setState(() {
+      notification.isRead = true;
+    });
+
+    if (notification.type == "post" || notification.type == "comment") {
+      openScreen(const ResearchFeedScreen());
+      return;
+    }
+
+    if (notification.type == "match") {
+      openScreen(const ResearchMatchesScreen());
+      return;
+    }
+
+    if (notification.type == "message") {
+      openScreen(const ResearchMessagesScreen());
+      return;
+    }
+
+    if (notification.type == "connection") {
+      openScreen(const ConnectionsScreen());
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("No linked screen for this notification yet."),
+      ),
+    );
+  }
+
   void markAllRead() {
     setState(() {
       NotificationService.markAllAsRead();
@@ -46,80 +87,95 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget notificationCard(NotificationModel notification) {
     final color = notificationColor(notification.type);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: notification.isRead ? Colors.white10 : color.withOpacity(0.45),
+    return InkWell(
+      borderRadius: BorderRadius.circular(22),
+      onTap: () => openNotification(notification),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: notification.isRead
+                ? Colors.white10
+                : color.withOpacity(0.45),
+          ),
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 46,
-            width: 46,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 46,
+              width: 46,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                notificationIcon(notification.type),
+                color: color,
+                size: 26,
+              ),
             ),
-            child: Icon(
-              notificationIcon(notification.type),
-              color: color,
-              size: 26,
-            ),
-          ),
 
-          const SizedBox(width: 14),
+            const SizedBox(width: 14),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        notification.title,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          notification.title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      if (!notification.isRead)
+                        Container(
+                          height: 9,
+                          width: 9,
+                          decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 7),
+
+                  Text(
+                    notification.body,
+                    style: const TextStyle(color: Colors.white70, height: 1.45),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Row(
+                    children: [
+                      Text(
+                        notification.timeAgo,
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
+                          color: Colors.white38,
+                          fontSize: 12,
                         ),
                       ),
-                    ),
-                    if (!notification.isRead)
-                      Container(
-                        height: 9,
-                        width: 9,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                  ],
-                ),
-
-                const SizedBox(height: 7),
-
-                Text(
-                  notification.body,
-                  style: const TextStyle(color: Colors.white70, height: 1.45),
-                ),
-
-                const SizedBox(height: 10),
-
-                Text(
-                  notification.timeAgo,
-                  style: const TextStyle(color: Colors.white38, fontSize: 12),
-                ),
-              ],
+                      const Spacer(),
+                      Icon(Icons.arrow_forward_ios, color: color, size: 14),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -251,7 +307,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 const SizedBox(height: 10),
 
                 const Text(
-                  "Track research matches, messages, comments, and connection activity.",
+                  "Tap any notification to open the related research activity.",
                   style: TextStyle(color: Colors.white70, height: 1.5),
                 ),
 

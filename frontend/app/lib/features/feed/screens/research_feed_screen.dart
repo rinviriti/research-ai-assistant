@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../backend/backend_provider.dart';
 import '../../../models/comment_model.dart';
 import '../../../models/post_model.dart';
-import '../../../services/comment_service.dart';
-import '../../../services/post_service.dart';
 import '../../../services/notification_service.dart';
 
 class ResearchFeedScreen extends StatefulWidget {
@@ -20,6 +19,9 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
 
   String selectedPostType = "Research Question";
 
+  List<PostModel> posts = [];
+  bool isLoading = true;
+
   final List<String> postTypes = const [
     "Research Question",
     "Ongoing Research",
@@ -28,6 +30,23 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
     "Collaboration Request",
     "Experiment Result",
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    loadPosts();
+  }
+
+  Future<void> loadPosts() async {
+    final loadedPosts = await BackendProvider.posts.getPosts();
+
+    if (!mounted) return;
+
+    setState(() {
+      posts = loadedPosts;
+      isLoading = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -51,7 +70,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
     return tags;
   }
 
-  void createPost() {
+  Future<void> createPost() async {
     final content = postController.text.trim();
 
     if (content.isEmpty) {
@@ -73,12 +92,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
       isLiked: false,
     );
 
-    setState(() {
-      PostService.addPost(post);
-      postController.clear();
-      tagController.clear();
-      selectedPostType = "Research Question";
-    });
+    await BackendProvider.posts.createPost(post);
 
     NotificationService.addNotification(
       title: "Research Post Created",
@@ -86,9 +100,26 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
       type: "post",
     );
 
+    if (!mounted) return;
+
+    setState(() {
+      postController.clear();
+      tagController.clear();
+      selectedPostType = "Research Question";
+    });
+
+    await loadPosts();
+
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Research post published successfully 🚀")),
     );
+  }
+
+  Future<void> toggleLike(PostModel post) async {
+    await BackendProvider.posts.toggleLike(post.postId);
+    await loadPosts();
   }
 
   void showCommentSheet(PostModel post) {
@@ -104,7 +135,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final comments = CommentService.getCommentsForPost(post.postId);
+            final comments = BackendProvider.comments.getComments(post.postId);
 
             Widget commentTile(CommentModel comment) {
               return Container(
@@ -146,100 +177,112 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
               );
             }
 
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                right: 20,
-                top: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-              ),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.72,
-                child: Column(
-                  children: [
-                    Container(
-                      width: 55,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      "Research Discussion",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      post.content,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white60,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Expanded(
-                      child: comments.isEmpty
-                          ? const Center(
-                              child: Text(
-                                "No comments yet. Start the discussion.",
-                                style: TextStyle(color: Colors.white60),
-                              ),
-                            )
-                          : ListView(
-                              children: comments.map(commentTile).toList(),
-                            ),
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
+            return FutureBuilder<List<CommentModel>>(
+              future: comments,
+              builder: (context, snapshot) {
+                final loadedComments = snapshot.data ?? [];
+
+                return Padding(
+                  padding: EdgeInsets.only(
+                    left: 20,
+                    right: 20,
+                    top: 20,
+                    bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                  ),
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.72,
+                    child: Column(
                       children: [
-                        Expanded(
-                          child: TextField(
-                            controller: commentController,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: const InputDecoration(
-                              hintText: "Write a research comment...",
-                            ),
+                        Container(
+                          width: 55,
+                          height: 5,
+                          decoration: BoxDecoration(
+                            color: Colors.white24,
+                            borderRadius: BorderRadius.circular(20),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        CircleAvatar(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
-                          child: IconButton(
-                            onPressed: () {
-                              final text = commentController.text.trim();
-
-                              if (text.isEmpty) return;
-
-                              CommentService.addComment(
-                                postId: post.postId,
-                                commenter: "You",
-                                comment: text,
-                              );
-
-                              commentController.clear();
-
-                              setModalState(() {});
-                              setState(() {});
-                            },
-                            icon: const Icon(Icons.send, color: Colors.black),
+                        const SizedBox(height: 20),
+                        const Text(
+                          "Research Discussion",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          post.content,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Expanded(
+                          child: loadedComments.isEmpty
+                              ? const Center(
+                                  child: Text(
+                                    "No comments yet. Start the discussion.",
+                                    style: TextStyle(color: Colors.white60),
+                                  ),
+                                )
+                              : ListView(
+                                  children: loadedComments
+                                      .map(commentTile)
+                                      .toList(),
+                                ),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: commentController,
+                                style: const TextStyle(color: Colors.white),
+                                decoration: const InputDecoration(
+                                  hintText: "Write a research comment...",
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            CircleAvatar(
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              child: IconButton(
+                                onPressed: () async {
+                                  final text = commentController.text.trim();
+
+                                  if (text.isEmpty) return;
+
+                                  await BackendProvider.comments.addComment(
+                                    postId: post.postId,
+                                    commenter: "You",
+                                    comment: text,
+                                  );
+
+                                  commentController.clear();
+
+                                  setModalState(() {});
+                                  setState(() {});
+                                },
+                                icon: const Icon(
+                                  Icons.send,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             );
           },
         );
@@ -382,198 +425,204 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
 
   Widget feedCard(PostModel post) {
     final primary = Theme.of(context).colorScheme.primary;
-    final commentCount = CommentService.commentCount(post.postId);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return FutureBuilder<int>(
+      future: BackendProvider.comments.commentCount(post.postId),
+      builder: (context, snapshot) {
+        final commentCount = snapshot.data ?? 0;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  radius: 27,
-                  backgroundColor: primary,
-                  child: Text(
-                    post.author.substring(0, 1),
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        post.author,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 17,
-                        ),
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        post.university,
-                        style: const TextStyle(
-                          color: Colors.white60,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: primary.withOpacity(0.14),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
+                    CircleAvatar(
+                      radius: 27,
+                      backgroundColor: primary,
                       child: Text(
-                        post.type,
-                        style: TextStyle(
-                          color: primary,
-                          fontSize: 11,
+                        post.author.substring(0, 1),
+                        style: const TextStyle(
+                          color: Colors.black,
                           fontWeight: FontWeight.bold,
+                          fontSize: 22,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      post.timeAgo,
-                      style: const TextStyle(
-                        color: Colors.white38,
-                        fontSize: 11,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            post.author,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 17,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            post.university,
+                            style: const TextStyle(
+                              color: Colors.white60,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: primary.withOpacity(0.14),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            post.type,
+                            style: TextStyle(
+                              color: primary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          post.timeAgo,
+                          style: const TextStyle(
+                            color: Colors.white38,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  post.content,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    height: 1.55,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Wrap(children: post.tags.map(tagChip).toList()),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.thumb_up,
+                      color: post.isLiked ? Colors.blueAccent : Colors.white38,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      "${post.likes}",
+                      style: const TextStyle(color: Colors.white60),
+                    ),
+                    const SizedBox(width: 18),
+                    const Icon(
+                      Icons.comment_outlined,
+                      color: Colors.white38,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      "$commentCount comments",
+                      style: const TextStyle(color: Colors.white60),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                const Divider(color: Colors.white10),
+                Row(
+                  children: [
+                    actionButton(
+                      icon: post.isLiked
+                          ? Icons.thumb_up
+                          : Icons.thumb_up_outlined,
+                      label: post.isLiked ? "Liked" : "Like",
+                      color: post.isLiked ? Colors.blueAccent : Colors.white60,
+                      onTap: () {
+                        toggleLike(post);
+                      },
+                    ),
+                    actionButton(
+                      icon: Icons.comment_outlined,
+                      label: "Comment",
+                      color: Colors.white60,
+                      onTap: () {
+                        showCommentSheet(post);
+                      },
+                    ),
+                    actionButton(
+                      icon: Icons.share_outlined,
+                      label: "Share",
+                      color: Colors.white60,
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Share feature coming soon."),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 18),
-            Text(
-              post.content,
-              style: const TextStyle(
-                color: Colors.white70,
-                height: 1.55,
-                fontSize: 15,
-              ),
-            ),
-            const SizedBox(height: 18),
-            Wrap(children: post.tags.map(tagChip).toList()),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Icon(
-                  Icons.thumb_up,
-                  color: post.isLiked ? Colors.blueAccent : Colors.white38,
-                  size: 18,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  "${post.likes}",
-                  style: const TextStyle(color: Colors.white60),
-                ),
-                const SizedBox(width: 18),
-                const Icon(
-                  Icons.comment_outlined,
-                  color: Colors.white38,
-                  size: 18,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  "$commentCount comments",
-                  style: const TextStyle(color: Colors.white60),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            const Divider(color: Colors.white10),
-            Row(
-              children: [
-                actionButton(
-                  icon: post.isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                  label: post.isLiked ? "Liked" : "Like",
-                  color: post.isLiked ? Colors.blueAccent : Colors.white60,
-                  onTap: () {
-                    setState(() {
-                      PostService.toggleLike(post.postId);
-                    });
-                  },
-                ),
-                actionButton(
-                  icon: Icons.comment_outlined,
-                  label: "Comment",
-                  color: Colors.white60,
-                  onTap: () {
-                    showCommentSheet(post);
-                  },
-                ),
-                actionButton(
-                  icon: Icons.share_outlined,
-                  label: "Share",
-                  color: Colors.white60,
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Share feature coming soon."),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final posts = PostService.posts;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(title: const Text("Research Feed")),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
-          const Text(
-            "Academic Research Community",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 31,
-              fontWeight: FontWeight.bold,
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                const Text(
+                  "Academic Research Community",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 31,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  "Discover publications, research questions, ongoing experiments, and collaborate with researchers worldwide.",
+                  style: TextStyle(color: Colors.white70, height: 1.5),
+                ),
+                const SizedBox(height: 24),
+                composerCard(),
+                ...posts.map(feedCard),
+              ],
             ),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            "Discover publications, research questions, ongoing experiments, and collaborate with researchers worldwide.",
-            style: TextStyle(color: Colors.white70, height: 1.5),
-          ),
-          const SizedBox(height: 24),
-          composerCard(),
-          ...posts.map(feedCard),
-        ],
-      ),
     );
   }
 }
