@@ -22,11 +22,16 @@ import '../../connections/screens/connections_screen.dart';
 import '../../matching/screens/swipe_matching_screen.dart';
 import '../../matching/screens/research_matches_screen.dart';
 import '../../messaging/screens/research_messages_screen.dart';
+import '../../search/screens/research_search_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   final List<Map<String, String>> features = const [
+    {
+      "title": "Research Search",
+      "subtitle": "Find posts, tags, and researchers",
+    },
     {"title": "Research Feed", "subtitle": "Share research updates"},
     {"title": "Saved Posts", "subtitle": "Your research reading library"},
     {"title": "Swipe Match", "subtitle": "Discover research collaborators"},
@@ -60,6 +65,9 @@ class HomeScreen extends StatelessWidget {
   }
 
   void openFeature(BuildContext context, String title) {
+    if (title == "Research Search") {
+      openScreen(context, const ResearchSearchScreen());
+    }
     if (title == "Research Feed")
       openScreen(context, const ResearchFeedScreen());
     if (title == "Saved Posts") openScreen(context, const SavedPostsScreen());
@@ -99,7 +107,7 @@ class HomeScreen extends StatelessWidget {
     if (title == "Experiment Tracker") return Icons.science_outlined;
     if (title == "Research Notes") return Icons.note_alt_outlined;
     if (title == "Project Docs") return Icons.description_outlined;
-
+    if (title == "Research Search") return Icons.search;
     return Icons.apps;
   }
 
@@ -110,6 +118,7 @@ class HomeScreen extends StatelessWidget {
     if (title == "Research Matches") return Colors.pinkAccent;
     if (title == "Research Messages") return Colors.blueAccent;
     if (title == "Research Profile") return Colors.indigoAccent;
+    if (title == "Research Search") return Colors.lightBlueAccent;
     if (title == "Connections") return Colors.lightGreenAccent;
     if (title == "Find Researchers")
       return Theme.of(context).colorScheme.secondary;
