@@ -6,8 +6,14 @@ class PostModel {
   final String type;
   final List<String> tags;
   final String timeAgo;
+
   int likes;
+
   bool isLiked;
+
+  String currentReaction;
+
+  Map<String, int> reactions;
 
   PostModel({
     required this.postId,
@@ -19,5 +25,15 @@ class PostModel {
     required this.timeAgo,
     required this.likes,
     this.isLiked = false,
-  });
+    this.currentReaction = "",
+    Map<String, int>? reactions,
+  }) : reactions =
+           reactions ??
+           {
+             "like": 0,
+             "support": 0,
+             "celebrate": 0,
+             "insightful": 0,
+             "applaud": 0,
+           };
 }

@@ -4,6 +4,7 @@ import '../../../backend/backend_provider.dart';
 import '../../../models/comment_model.dart';
 import '../../../models/post_model.dart';
 import '../../../services/notification_service.dart';
+import '../../../services/post_service.dart';
 
 class ResearchFeedScreen extends StatefulWidget {
   const ResearchFeedScreen({super.key});
@@ -29,6 +30,14 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
     "Dataset Request",
     "Collaboration Request",
     "Experiment Result",
+  ];
+
+  final List<String> reactionTypes = const [
+    "like",
+    "support",
+    "celebrate",
+    "insightful",
+    "applaud",
   ];
 
   @override
@@ -98,6 +107,8 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
       title: "Research Post Created",
       body: "Your new research post was added to the feed.",
       type: "post",
+      targetId: post.postId,
+      targetName: post.author,
     );
 
     if (!mounted) return;
@@ -117,9 +128,103 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
     );
   }
 
-  Future<void> toggleLike(PostModel post) async {
-    await BackendProvider.posts.toggleLike(post.postId);
+  Future<void> setReaction(PostModel post, String reactionType) async {
+    PostService.setReaction(postId: post.postId, reactionType: reactionType);
+
     await loadPosts();
+  }
+
+  void showReactionPicker(PostModel post) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                height: 5,
+                width: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "React to this research post",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 21,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: reactionTypes.map((reactionType) {
+                  final isSelected = post.currentReaction == reactionType;
+
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      await setReaction(post, reactionType);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.18)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.white10,
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            PostService.reactionEmoji(reactionType),
+                            style: const TextStyle(fontSize: 30),
+                          ),
+                          const SizedBox(height: 7),
+                          Text(
+                            PostService.reactionLabel(reactionType),
+                            style: TextStyle(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.primary
+                                  : Colors.white70,
+                              fontSize: 11,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void showCommentSheet(PostModel post) {
@@ -381,11 +486,13 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
     required String label,
     required VoidCallback onTap,
     required Color color,
+    VoidCallback? onLongPress,
   }) {
     return Expanded(
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10),
           child: Row(
@@ -421,6 +528,86 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
         ),
       ),
     );
+  }
+
+  Widget reactionSummary(PostModel post) {
+    final activeReactions = reactionTypes
+        .where((reactionType) => (post.reactions[reactionType] ?? 0) > 0)
+        .toList();
+
+    if (activeReactions.isEmpty) {
+      return const Text(
+        "No reactions yet",
+        style: TextStyle(color: Colors.white38),
+      );
+    }
+
+    return Row(
+      children: [
+        SizedBox(
+          height: 24,
+          width: activeReactions.take(3).length * 22,
+          child: Stack(
+            children: activeReactions.take(3).toList().asMap().entries.map((
+              entry,
+            ) {
+              final index = entry.key;
+              final reactionType = entry.value;
+
+              return Positioned(
+                left: index * 18,
+                child: Container(
+                  height: 24,
+                  width: 24,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white10),
+                  ),
+                  child: Text(
+                    PostService.reactionEmoji(reactionType),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          "${PostService.totalReactions(post)}",
+          style: const TextStyle(color: Colors.white60),
+        ),
+      ],
+    );
+  }
+
+  String reactionButtonLabel(PostModel post) {
+    if (post.currentReaction.isEmpty) return "React";
+
+    return PostService.reactionLabel(post.currentReaction);
+  }
+
+  IconData reactionButtonIcon(PostModel post) {
+    if (post.currentReaction == "support") return Icons.favorite;
+    if (post.currentReaction == "celebrate") return Icons.celebration;
+    if (post.currentReaction == "insightful") return Icons.lightbulb;
+    if (post.currentReaction == "applaud") return Icons.back_hand;
+    if (post.currentReaction == "like") return Icons.thumb_up;
+
+    return Icons.thumb_up_outlined;
+  }
+
+  Color reactionButtonColor(PostModel post) {
+    if (post.currentReaction.isEmpty) return Colors.white60;
+
+    if (post.currentReaction == "support") return Colors.redAccent;
+    if (post.currentReaction == "celebrate") return Colors.amber;
+    if (post.currentReaction == "insightful") return Colors.lightBlueAccent;
+    if (post.currentReaction == "applaud") return Colors.greenAccent;
+
+    return Colors.blueAccent;
   }
 
   Widget feedCard(PostModel post) {
@@ -528,23 +715,8 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
                 const SizedBox(height: 18),
                 Row(
                   children: [
-                    Icon(
-                      Icons.thumb_up,
-                      color: post.isLiked ? Colors.blueAccent : Colors.white38,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      "${post.likes}",
-                      style: const TextStyle(color: Colors.white60),
-                    ),
-                    const SizedBox(width: 18),
-                    const Icon(
-                      Icons.comment_outlined,
-                      color: Colors.white38,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 6),
+                    reactionSummary(post),
+                    const Spacer(),
                     Text(
                       "$commentCount comments",
                       style: const TextStyle(color: Colors.white60),
@@ -556,13 +728,14 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
                 Row(
                   children: [
                     actionButton(
-                      icon: post.isLiked
-                          ? Icons.thumb_up
-                          : Icons.thumb_up_outlined,
-                      label: post.isLiked ? "Liked" : "Like",
-                      color: post.isLiked ? Colors.blueAccent : Colors.white60,
+                      icon: reactionButtonIcon(post),
+                      label: reactionButtonLabel(post),
+                      color: reactionButtonColor(post),
                       onTap: () {
-                        toggleLike(post);
+                        setReaction(post, "like");
+                      },
+                      onLongPress: () {
+                        showReactionPicker(post);
                       },
                     ),
                     actionButton(
@@ -586,6 +759,11 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
                       },
                     ),
                   ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  "Long press React to choose Support, Celebrate, Insightful, or Applaud.",
+                  style: TextStyle(color: Colors.white38, fontSize: 11),
                 ),
               ],
             ),

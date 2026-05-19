@@ -4,7 +4,6 @@ import '../../../services/auth_service.dart';
 import '../../../services/summary_service.dart';
 import '../../../services/experiment_service.dart';
 import '../../../services/note_service.dart';
-import '../../../services/notification_service.dart';
 
 import '../../auth/screens/login_screen.dart';
 import '../../paper/screens/upload_paper_screen.dart';
@@ -22,13 +21,11 @@ import '../../connections/screens/connections_screen.dart';
 import '../../matching/screens/swipe_matching_screen.dart';
 import '../../matching/screens/research_matches_screen.dart';
 import '../../messaging/screens/research_messages_screen.dart';
-import '../../notifications/screens/notifications_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   final List<Map<String, String>> features = const [
-    {"title": "Notifications", "subtitle": "Research activity alerts"},
     {"title": "Swipe Match", "subtitle": "Discover research collaborators"},
     {"title": "Research Matches", "subtitle": "View interested researchers"},
     {"title": "Research Messages", "subtitle": "Chat with matched researchers"},
@@ -61,10 +58,6 @@ class HomeScreen extends StatelessWidget {
   }
 
   void openFeature(BuildContext context, String title) {
-    if (title == "Notifications") {
-      openScreen(context, const NotificationsScreen());
-    }
-
     if (title == "Swipe Match") {
       openScreen(context, const SwipeMatchingScreen());
     }
@@ -119,7 +112,6 @@ class HomeScreen extends StatelessWidget {
   }
 
   IconData featureIcon(String title) {
-    if (title == "Notifications") return Icons.notifications_none;
     if (title == "Swipe Match") return Icons.swipe_outlined;
     if (title == "Research Matches") return Icons.favorite_border;
     if (title == "Research Messages") return Icons.forum_outlined;
@@ -138,7 +130,6 @@ class HomeScreen extends StatelessWidget {
   }
 
   Color featureColor(BuildContext context, String title) {
-    if (title == "Notifications") return Colors.orangeAccent;
     if (title == "Swipe Match") return Colors.pinkAccent;
     if (title == "Research Matches") return Colors.pinkAccent;
     if (title == "Research Messages") return Colors.blueAccent;
@@ -183,7 +174,6 @@ class HomeScreen extends StatelessWidget {
   Widget heroCard(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     final secondary = Theme.of(context).colorScheme.secondary;
-    final unread = NotificationService.unreadCount();
 
     return Container(
       width: double.infinity,
@@ -204,60 +194,13 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  "Welcome back 👋",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              InkWell(
-                borderRadius: BorderRadius.circular(18),
-                onTap: () => openScreen(context, const NotificationsScreen()),
-                child: Stack(
-                  children: [
-                    Container(
-                      height: 46,
-                      width: 46,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.white10),
-                      ),
-                      child: const Icon(
-                        Icons.notifications_none,
-                        color: Colors.white,
-                      ),
-                    ),
-                    if (unread > 0)
-                      Positioned(
-                        right: 5,
-                        top: 5,
-                        child: Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: const BoxDecoration(
-                            color: Colors.orangeAccent,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Text(
-                            unread.toString(),
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
+          const Text(
+            "Welcome back 👋",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+            ),
           ),
 
           const SizedBox(height: 8),
@@ -512,21 +455,6 @@ class HomeScreen extends StatelessWidget {
       );
     }
 
-    if (NotificationService.notifications.isNotEmpty) {
-      final latest = NotificationService.notifications.first;
-
-      activities.add(
-        recentActivityItem(
-          context: context,
-          icon: Icons.notifications_none,
-          iconColor: Colors.orangeAccent,
-          title: latest.title,
-          subtitle: latest.body,
-          screen: const NotificationsScreen(),
-        ),
-      );
-    }
-
     if (activities.isEmpty) {
       activities.add(
         Container(
@@ -619,7 +547,6 @@ class HomeScreen extends StatelessWidget {
         .length;
     final totalExperiments = ExperimentService.experiments.length;
     final totalNotes = NoteService.notes.length;
-    final unreadNotifications = NotificationService.unreadCount();
 
     final primary = Theme.of(context).colorScheme.primary;
     final secondary = Theme.of(context).colorScheme.secondary;
@@ -627,38 +554,13 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text("Research Hub"),
+        automaticallyImplyLeading: false,
+        title: const Text(
+          "Research Hub",
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26),
+        ),
+        centerTitle: true,
         actions: [
-          Stack(
-            children: [
-              IconButton(
-                tooltip: "Notifications",
-                onPressed: () =>
-                    openScreen(context, const NotificationsScreen()),
-                icon: const Icon(Icons.notifications_none),
-              ),
-              if (unreadNotifications > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.orangeAccent,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      unreadNotifications.toString(),
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
           IconButton(
             tooltip: "Logout",
             onPressed: () => logout(context),
@@ -757,10 +659,10 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 quickAction(
                   context: context,
-                  icon: Icons.notifications_none,
-                  title: "Alerts",
-                  screen: const NotificationsScreen(),
-                  color: Colors.orangeAccent,
+                  icon: Icons.forum_outlined,
+                  title: "Messages",
+                  screen: const ResearchMessagesScreen(),
+                  color: Colors.blueAccent,
                 ),
               ],
             ),
