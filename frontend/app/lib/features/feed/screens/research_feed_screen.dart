@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../backend/backend_provider.dart';
 import '../../../models/comment_model.dart';
 import '../../../models/post_model.dart';
-import '../../../services/notification_service.dart';
 import '../../../services/post_service.dart';
 
 class ResearchFeedScreen extends StatefulWidget {
@@ -102,14 +101,6 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
     );
 
     await BackendProvider.posts.createPost(post);
-
-    NotificationService.addNotification(
-      title: "Research Post Created",
-      body: "Your new research post was added to the feed.",
-      type: "post",
-      targetId: post.postId,
-      targetName: post.author,
-    );
 
     if (!mounted) return;
 
@@ -229,6 +220,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
 
   void showCommentSheet(PostModel post) {
     commentController.clear();
+    CommentModel? replyingTo;
 
     showModalBottomSheet(
       context: context,
@@ -242,43 +234,115 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
           builder: (context, setModalState) {
             final comments = BackendProvider.comments.getComments(post.postId);
 
-            Widget commentTile(CommentModel comment) {
+            Widget replyTile(CommentModel reply) {
               return Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                padding: const EdgeInsets.all(14),
+                margin: const EdgeInsets.only(left: 28, top: 10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(18),
+                  color: Theme.of(context).cardColor.withOpacity(0.72),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.white10),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      comment.commenter,
+                      reply.commenter,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      reply.comment,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.4,
+                        fontSize: 13,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      comment.comment,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      comment.timeAgo,
+                      reply.timeAgo,
                       style: const TextStyle(
                         color: Colors.white38,
-                        fontSize: 11,
+                        fontSize: 10,
                       ),
                     ),
                   ],
                 ),
+              );
+            }
+
+            Widget commentTile(CommentModel comment) {
+              return FutureBuilder<List<CommentModel>>(
+                future: BackendProvider.comments.getReplies(comment.commentId),
+                builder: (context, replySnapshot) {
+                  final replies = replySnapshot.data ?? [];
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: Colors.white10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          comment.commenter,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          comment.comment,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            height: 1.4,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Text(
+                              comment.timeAgo,
+                              style: const TextStyle(
+                                color: Colors.white38,
+                                fontSize: 11,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            InkWell(
+                              onTap: () {
+                                setModalState(() {
+                                  replyingTo = comment;
+                                  commentController.text =
+                                      "@${comment.commenter} ";
+                                });
+                              },
+                              child: Text(
+                                "Reply",
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (replies.isNotEmpty) ...replies.map(replyTile),
+                      ],
+                    ),
+                  );
+                },
               );
             }
 
@@ -295,7 +359,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
                     bottom: MediaQuery.of(context).viewInsets.bottom + 20,
                   ),
                   child: SizedBox(
-                    height: MediaQuery.of(context).size.height * 0.72,
+                    height: MediaQuery.of(context).size.height * 0.76,
                     child: Column(
                       children: [
                         Container(
@@ -341,15 +405,64 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
                                       .toList(),
                                 ),
                         ),
-                        const SizedBox(height: 14),
+                        if (replyingTo != null)
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 9,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withOpacity(0.35),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    "Replying to ${replyingTo!.commenter}",
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                                InkWell(
+                                  onTap: () {
+                                    setModalState(() {
+                                      replyingTo = null;
+                                      commentController.clear();
+                                    });
+                                  },
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.white60,
+                                    size: 18,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         Row(
                           children: [
                             Expanded(
                               child: TextField(
                                 controller: commentController,
                                 style: const TextStyle(color: Colors.white),
-                                decoration: const InputDecoration(
-                                  hintText: "Write a research comment...",
+                                decoration: InputDecoration(
+                                  hintText: replyingTo == null
+                                      ? "Write a research comment..."
+                                      : "Write a reply...",
                                 ),
                               ),
                             ),
@@ -364,15 +477,27 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
 
                                   if (text.isEmpty) return;
 
-                                  await BackendProvider.comments.addComment(
-                                    postId: post.postId,
-                                    commenter: "You",
-                                    comment: text,
-                                  );
+                                  if (replyingTo == null) {
+                                    await BackendProvider.comments.addComment(
+                                      postId: post.postId,
+                                      commenter: "You",
+                                      comment: text,
+                                    );
+                                  } else {
+                                    await BackendProvider.comments.addReply(
+                                      postId: post.postId,
+                                      parentCommentId: replyingTo!.commentId,
+                                      commenter: "You",
+                                      reply: text,
+                                    );
+                                  }
 
                                   commentController.clear();
 
-                                  setModalState(() {});
+                                  setModalState(() {
+                                    replyingTo = null;
+                                  });
+
                                   setState(() {});
                                 },
                                 icon: const Icon(
