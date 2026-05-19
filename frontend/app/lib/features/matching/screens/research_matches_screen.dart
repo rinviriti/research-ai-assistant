@@ -4,6 +4,7 @@ import '../../../models/swipe_match_model.dart';
 import '../../../services/swipe_match_service.dart';
 import '../../../services/research_messaging_service.dart';
 import '../../messaging/screens/research_chat_detail_screen.dart';
+import '../../researchers/screens/researcher_profile_preview_screen.dart';
 
 class ResearchMatchesScreen extends StatefulWidget {
   const ResearchMatchesScreen({super.key});
@@ -13,6 +14,43 @@ class ResearchMatchesScreen extends StatefulWidget {
 }
 
 class _ResearchMatchesScreenState extends State<ResearchMatchesScreen> {
+  void openProfile(SwipeMatchModel match) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResearcherProfilePreviewScreen(
+          name: match.researcherName,
+          university: match.university,
+          interests: [
+            "Research Collaboration",
+            "Academic Networking",
+            "${match.matchScore}% Match",
+            match.status,
+          ],
+        ),
+      ),
+    );
+  }
+
+  void openChat(SwipeMatchModel match) {
+    ResearchMessagingService.createThread(
+      researcherName: match.researcherName,
+      university: match.university,
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResearchChatDetailScreen(
+          researcherName: match.researcherName,
+          university: match.university,
+        ),
+      ),
+    ).then((_) {
+      setState(() {});
+    });
+  }
+
   Widget matchCard(SwipeMatchModel match) {
     final primary = Theme.of(context).colorScheme.primary;
 
@@ -26,78 +64,87 @@ class _ResearchMatchesScreenState extends State<ResearchMatchesScreen> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: primary,
-            child: Text(
-              match.researcherName.substring(0, 1),
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
+          Expanded(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () => openProfile(match),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: primary,
+                    child: Text(
+                      match.researcherName.substring(0, 1),
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 23,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          match.researcherName,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          match.university,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white60,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 11,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: primary.withOpacity(0.14),
+                            borderRadius: BorderRadius.circular(30),
+                            border: Border.all(
+                              color: primary.withOpacity(0.45),
+                            ),
+                          ),
+                          child: Text(
+                            "${match.matchScore}% Match • ${match.status}",
+                            style: TextStyle(
+                              color: primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  match.researcherName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  match.university,
-                  style: const TextStyle(color: Colors.white60, fontSize: 13),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 11,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: primary.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: primary.withOpacity(0.45)),
-                  ),
-                  child: Text(
-                    "${match.matchScore}% Match • ${match.status}",
-                    style: TextStyle(
-                      color: primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+          IconButton(
+            tooltip: "View Profile",
+            onPressed: () => openProfile(match),
+            icon: const Icon(
+              Icons.account_circle_outlined,
+              color: Colors.white60,
             ),
           ),
           IconButton(
-            onPressed: () {
-              ResearchMessagingService.createThread(
-                researcherName: match.researcherName,
-                university: match.university,
-              );
-
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ResearchChatDetailScreen(
-                    researcherName: match.researcherName,
-                    university: match.university,
-                  ),
-                ),
-              ).then((_) {
-                setState(() {});
-              });
-            },
+            tooltip: "Message",
+            onPressed: () => openChat(match),
             icon: Icon(Icons.chat_bubble_outline, color: primary),
           ),
         ],
