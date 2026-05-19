@@ -5,6 +5,10 @@ import '../../../models/comment_model.dart';
 import '../../../models/post_model.dart';
 import '../../../services/post_service.dart';
 import '../../researchers/screens/researcher_profile_preview_screen.dart';
+import 'dart:convert';
+
+import '../../../models/post_media_model.dart';
+import '../../../services/media_service.dart';
 
 class ResearchFeedScreen extends StatefulWidget {
   const ResearchFeedScreen({super.key});
@@ -20,7 +24,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
   final quoteController = TextEditingController();
 
   String selectedPostType = "Research Question";
-
+  List<PostMediaModel> selectedMedia = [];
   List<PostModel> posts = [];
   bool isLoading = true;
 
@@ -97,12 +101,13 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
       timeAgo: "Just now",
       likes: 0,
       isLiked: false,
+      media: List<PostMediaModel>.from(selectedMedia),
     );
 
     await BackendProvider.posts.createPost(post);
 
     if (!mounted) return;
-
+    selectedMedia.clear();
     setState(() {
       postController.clear();
       tagController.clear();
@@ -139,6 +144,32 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> pickImageAttachment() async {
+    final image = await MediaService.pickPostImage();
+
+    if (image == null) return;
+
+    setState(() {
+      selectedMedia.add(image);
+    });
+  }
+
+  Future<void> pickPdfAttachment() async {
+    final pdf = await MediaService.pickPostPdf();
+
+    if (pdf == null) return;
+
+    setState(() {
+      selectedMedia.add(pdf);
+    });
+  }
+
+  void removeMedia(PostMediaModel media) {
+    setState(() {
+      selectedMedia.removeWhere((item) => item.mediaId == media.mediaId);
+    });
   }
 
   void showReactionPicker(PostModel post) {
@@ -657,6 +688,65 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
     );
   }
 
+  Widget selectedMediaPreview() {
+    if (selectedMedia.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: selectedMedia.map((media) {
+        final isImage = media.type == PostMediaType.image;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white10),
+          ),
+          child: Row(
+            children: [
+              if (isImage)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.memory(
+                    base64Decode(media.base64Data),
+                    height: 52,
+                    width: 52,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              else
+                Container(
+                  height: 52,
+                  width: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.picture_as_pdf,
+                    color: Colors.redAccent,
+                  ),
+                ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  media.fileName,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ),
+              IconButton(
+                onPressed: () => removeMedia(media),
+                icon: const Icon(Icons.close, color: Colors.white60),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget composerCard() {
     final primary = Theme.of(context).colorScheme.primary;
 
@@ -724,9 +814,35 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
             ),
           ),
           const SizedBox(height: 18),
+          selectedMediaPreview(),
+
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: pickImageAttachment,
+                  icon: const Icon(Icons.image_outlined),
+                  label: const Text("Image"),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: pickPdfAttachment,
+                  icon: const Icon(Icons.picture_as_pdf_outlined),
+                  label: const Text("PDF"),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 18),
           SizedBox(
             width: double.infinity,
             height: 54,
+
             child: ElevatedButton.icon(
               onPressed: createPost,
               icon: const Icon(Icons.send),
@@ -871,6 +987,67 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
     return Colors.blueAccent;
   }
 
+  Widget postMediaPreview(List<PostMediaModel> mediaItems) {
+    if (mediaItems.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: mediaItems.map((media) {
+        final isImage = media.type == PostMediaType.image;
+
+        if (isImage) {
+          return Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: Image.memory(
+                base64Decode(media.base64Data),
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+          );
+        }
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.redAccent.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.redAccent.withOpacity(0.35)),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.picture_as_pdf,
+                color: Colors.redAccent,
+                size: 34,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  media.fileName,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const Text(
+                "PDF",
+                style: TextStyle(
+                  color: Colors.redAccent,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   Widget feedCard(PostModel post) {
     final primary = Theme.of(context).colorScheme.primary;
 
@@ -1007,7 +1184,13 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
                             fontSize: 15,
                           ),
                         ),
+
+                        const SizedBox(height: 16),
+
+                        postMediaPreview(post.media),
+
                         const SizedBox(height: 18),
+
                         Wrap(children: post.tags.map(tagChip).toList()),
                         const SizedBox(height: 18),
                         Row(
