@@ -1,13 +1,15 @@
 class ResearchMessageModel {
-  final String researcherName;
+  final String messageId;
+  final String senderName;
   final String message;
-  final bool isMe;
   final String timeAgo;
+  final bool isMe;
 
   ResearchMessageModel({
-    required this.researcherName,
+    required this.messageId,
+    required this.senderName,
     required this.message,
-    required this.isMe,
     required this.timeAgo,
+    required this.isMe,
   });
 }

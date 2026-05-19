@@ -1,87 +1,143 @@
-import '../models/chat_thread_model.dart';
 import '../models/research_message_model.dart';
+import '../models/research_thread_model.dart';
 import 'notification_service.dart';
+import 'realtime_messaging_service.dart';
 
 class ResearchMessagingService {
-  static final List<ResearchMessageModel> messages = [];
-  static final List<ChatThreadModel> threads = [];
+  static final List<ResearchThreadModel> threads = [];
+  static final Map<String, List<ResearchMessageModel>> messages = {};
+
+  static String threadId(String researcherName) {
+    return researcherName.trim().toLowerCase().replaceAll(" ", "_");
+  }
 
   static void createThread({
     required String researcherName,
     required String university,
   }) {
-    final exists = threads.any(
-      (thread) => thread.researcherName == researcherName,
-    );
+    final id = threadId(researcherName);
 
-    if (exists) return;
+    final exists = threads.any((thread) => thread.threadId == id);
 
-    threads.add(
-      ChatThreadModel(
-        researcherName: researcherName,
-        university: university,
-        lastMessage: "Start a research conversation",
-        timeAgo: "New",
-      ),
-    );
+    if (!exists) {
+      threads.insert(
+        0,
+        ResearchThreadModel(
+          threadId: id,
+          researcherName: researcherName,
+          university: university,
+          lastMessage: "Start a research conversation.",
+          timeAgo: "Just now",
+          unreadCount: 0,
+        ),
+      );
+
+      messages[id] = [];
+    }
   }
 
-  static List<ChatThreadModel> getThreads() {
-    return threads.map((thread) {
-      final threadMessages = getMessages(thread.researcherName);
-
-      if (threadMessages.isEmpty) {
-        return thread;
-      }
-
-      return ChatThreadModel(
-        researcherName: thread.researcherName,
-        university: thread.university,
-        lastMessage: threadMessages.last.message,
-        timeAgo: threadMessages.last.timeAgo,
-      );
-    }).toList();
+  static List<ResearchThreadModel> getThreads() {
+    return threads;
   }
 
   static List<ResearchMessageModel> getMessages(String researcherName) {
-    return messages
-        .where((message) => message.researcherName == researcherName)
-        .toList();
+    final id = threadId(researcherName);
+    return messages[id] ?? [];
   }
 
   static void sendMessage({
     required String researcherName,
+    required String university,
     required String message,
+    bool isMe = true,
   }) {
-    messages.add(
-      ResearchMessageModel(
-        researcherName: researcherName,
-        message: message,
-        isMe: true,
-        timeAgo: "Now",
-      ),
+    createThread(researcherName: researcherName, university: university);
+
+    final id = threadId(researcherName);
+
+    final newMessage = ResearchMessageModel(
+      messageId: DateTime.now().microsecondsSinceEpoch.toString(),
+      senderName: isMe ? "You" : researcherName,
+      message: message,
+      timeAgo: "Just now",
+      isMe: isMe,
     );
 
-    messages.add(
-      ResearchMessageModel(
+    messages[id] ??= [];
+    messages[id]!.add(newMessage);
+
+    final threadIndex = threads.indexWhere((thread) => thread.threadId == id);
+
+    if (threadIndex != -1) {
+      final oldThread = threads[threadIndex];
+
+      threads[threadIndex] = ResearchThreadModel(
+        threadId: oldThread.threadId,
+        researcherName: oldThread.researcherName,
+        university: oldThread.university,
+        lastMessage: message,
+        timeAgo: "Just now",
+        unreadCount: isMe ? oldThread.unreadCount : oldThread.unreadCount + 1,
+      );
+
+      final updatedThread = threads.removeAt(threadIndex);
+      threads.insert(0, updatedThread);
+    }
+
+    if (!isMe) {
+      NotificationService.addNotification(
+        title: "New Research Message",
+        body: "$researcherName sent you a message.",
+        type: "message",
+        targetId: id,
+        targetName: researcherName,
+      );
+    }
+
+    RealtimeMessagingService.notifyThread(researcherName);
+  }
+
+  static void receiveAutoReply({
+    required String researcherName,
+    required String university,
+  }) {
+    Future.delayed(const Duration(milliseconds: 650), () {
+      sendMessage(
         researcherName: researcherName,
+        university: university,
         message:
-            "Thanks for your message. I would love to discuss this research topic further.",
+            "Thanks for reaching out. I would be happy to discuss possible research collaboration.",
         isMe: false,
-        timeAgo: "Now",
-      ),
-    );
+      );
+    });
+  }
 
-    NotificationService.addNotification(
-      title: "New Research Message",
-      body: "Conversation updated with $researcherName.",
-      type: "message",
-      targetName: researcherName,
+  static void markThreadAsRead(String researcherName) {
+    final id = threadId(researcherName);
+
+    final threadIndex = threads.indexWhere((thread) => thread.threadId == id);
+
+    if (threadIndex == -1) return;
+
+    final oldThread = threads[threadIndex];
+
+    threads[threadIndex] = ResearchThreadModel(
+      threadId: oldThread.threadId,
+      researcherName: oldThread.researcherName,
+      university: oldThread.university,
+      lastMessage: oldThread.lastMessage,
+      timeAgo: oldThread.timeAgo,
+      unreadCount: 0,
     );
   }
 
+  static int totalUnreadCount() {
+    return threads.fold(0, (total, thread) => total + thread.unreadCount);
+  }
+
   static void clearMessages() {
-    messages.clear();
     threads.clear();
+    messages.clear();
+    RealtimeMessagingService.disposeAll();
   }
 }
