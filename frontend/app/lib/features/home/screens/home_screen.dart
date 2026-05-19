@@ -16,6 +16,7 @@ import '../../notes/screens/research_notes_screen.dart';
 import '../../chat/screens/ai_chat_screen.dart';
 import '../../researchers/screens/researcher_screen.dart';
 import '../../feed/screens/research_feed_screen.dart';
+import '../../feed/screens/saved_posts_screen.dart';
 import '../../research_profile/screens/research_profile_screen.dart';
 import '../../connections/screens/connections_screen.dart';
 import '../../matching/screens/swipe_matching_screen.dart';
@@ -26,12 +27,13 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   final List<Map<String, String>> features = const [
+    {"title": "Research Feed", "subtitle": "Share research updates"},
+    {"title": "Saved Posts", "subtitle": "Your research reading library"},
     {"title": "Swipe Match", "subtitle": "Discover research collaborators"},
     {"title": "Research Matches", "subtitle": "View interested researchers"},
     {"title": "Research Messages", "subtitle": "Chat with matched researchers"},
     {"title": "Research Profile", "subtitle": "Professional academic identity"},
     {"title": "Connections", "subtitle": "Manage research network"},
-    {"title": "Research Feed", "subtitle": "Share research updates"},
     {"title": "Find Researchers", "subtitle": "Match with collaborators"},
     {"title": "AI Chat", "subtitle": "Ask research questions"},
     {"title": "Upload Paper", "subtitle": "Extract text from PDF papers"},
@@ -58,66 +60,38 @@ class HomeScreen extends StatelessWidget {
   }
 
   void openFeature(BuildContext context, String title) {
-    if (title == "Swipe Match") {
-      openScreen(context, const SwipeMatchingScreen());
-    }
-
-    if (title == "Research Matches") {
-      openScreen(context, const ResearchMatchesScreen());
-    }
-
-    if (title == "Research Messages") {
-      openScreen(context, const ResearchMessagesScreen());
-    }
-
-    if (title == "Research Profile") {
-      openScreen(context, const ResearchProfileScreen());
-    }
-
-    if (title == "Connections") {
-      openScreen(context, const ConnectionsScreen());
-    }
-
-    if (title == "Research Feed") {
+    if (title == "Research Feed")
       openScreen(context, const ResearchFeedScreen());
-    }
-
-    if (title == "Find Researchers") {
+    if (title == "Saved Posts") openScreen(context, const SavedPostsScreen());
+    if (title == "Swipe Match")
+      openScreen(context, const SwipeMatchingScreen());
+    if (title == "Research Matches")
+      openScreen(context, const ResearchMatchesScreen());
+    if (title == "Research Messages")
+      openScreen(context, const ResearchMessagesScreen());
+    if (title == "Research Profile")
+      openScreen(context, const ResearchProfileScreen());
+    if (title == "Connections") openScreen(context, const ConnectionsScreen());
+    if (title == "Find Researchers")
       openScreen(context, const ResearcherScreen());
-    }
-
-    if (title == "AI Chat") {
-      openScreen(context, const AIChatScreen());
-    }
-
-    if (title == "Upload Paper") {
-      openScreen(context, const UploadPaperScreen());
-    }
-
-    if (title == "AI Summary") {
-      openScreen(context, const SummaryScreen());
-    }
-
-    if (title == "Experiment Tracker") {
+    if (title == "AI Chat") openScreen(context, const AIChatScreen());
+    if (title == "Upload Paper") openScreen(context, const UploadPaperScreen());
+    if (title == "AI Summary") openScreen(context, const SummaryScreen());
+    if (title == "Experiment Tracker")
       openScreen(context, const ExperimentTrackerScreen());
-    }
-
-    if (title == "Research Notes") {
+    if (title == "Research Notes")
       openScreen(context, const ResearchNotesScreen());
-    }
-
-    if (title == "Project Docs") {
-      openScreen(context, const ProjectDocsScreen());
-    }
+    if (title == "Project Docs") openScreen(context, const ProjectDocsScreen());
   }
 
   IconData featureIcon(String title) {
+    if (title == "Research Feed") return Icons.dynamic_feed_outlined;
+    if (title == "Saved Posts") return Icons.bookmark_border;
     if (title == "Swipe Match") return Icons.swipe_outlined;
     if (title == "Research Matches") return Icons.favorite_border;
     if (title == "Research Messages") return Icons.forum_outlined;
     if (title == "Research Profile") return Icons.account_circle_outlined;
     if (title == "Connections") return Icons.handshake_outlined;
-    if (title == "Research Feed") return Icons.dynamic_feed_outlined;
     if (title == "Find Researchers") return Icons.people_alt_outlined;
     if (title == "AI Chat") return Icons.chat_bubble_outline;
     if (title == "Upload Paper") return Icons.picture_as_pdf_outlined;
@@ -130,15 +104,15 @@ class HomeScreen extends StatelessWidget {
   }
 
   Color featureColor(BuildContext context, String title) {
+    if (title == "Research Feed") return Colors.cyanAccent;
+    if (title == "Saved Posts") return Colors.amber;
     if (title == "Swipe Match") return Colors.pinkAccent;
     if (title == "Research Matches") return Colors.pinkAccent;
     if (title == "Research Messages") return Colors.blueAccent;
     if (title == "Research Profile") return Colors.indigoAccent;
     if (title == "Connections") return Colors.lightGreenAccent;
-    if (title == "Research Feed") return Colors.cyanAccent;
-    if (title == "Find Researchers") {
+    if (title == "Find Researchers")
       return Theme.of(context).colorScheme.secondary;
-    }
     if (title == "AI Chat") return Colors.tealAccent;
     if (title == "Upload Paper") return Colors.redAccent;
     if (title == "Experiment Tracker") return Colors.greenAccent;
@@ -202,9 +176,7 @@ class HomeScreen extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 8),
-
           Text(
             AuthService.currentUser ?? "Researcher",
             style: TextStyle(
@@ -213,16 +185,12 @@ class HomeScreen extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-
           const SizedBox(height: 18),
-
           const Text(
-            "Build your academic identity, share research updates, find collaborators, summarize papers, and organize your research workflow.",
+            "Build your academic identity, share research updates, save useful posts, find collaborators, and organize your research workflow.",
             style: TextStyle(color: Colors.white70, height: 1.55, fontSize: 15),
           ),
-
           const SizedBox(height: 20),
-
           Row(
             children: [
               Expanded(
@@ -643,18 +611,18 @@ class HomeScreen extends StatelessWidget {
               children: [
                 quickAction(
                   context: context,
-                  icon: Icons.account_circle_outlined,
-                  title: "Profile",
-                  screen: const ResearchProfileScreen(),
-                  color: Colors.indigoAccent,
-                ),
-                const SizedBox(width: 12),
-                quickAction(
-                  context: context,
                   icon: Icons.dynamic_feed_outlined,
                   title: "Feed",
                   screen: const ResearchFeedScreen(),
                   color: Colors.cyanAccent,
+                ),
+                const SizedBox(width: 12),
+                quickAction(
+                  context: context,
+                  icon: Icons.bookmark_border,
+                  title: "Saved",
+                  screen: const SavedPostsScreen(),
+                  color: Colors.amber,
                 ),
                 const SizedBox(width: 12),
                 quickAction(
