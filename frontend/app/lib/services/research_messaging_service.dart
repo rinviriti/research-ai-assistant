@@ -76,17 +76,12 @@ class ResearchMessagingService {
       title: "New Research Message",
       body: "Conversation updated with $researcherName.",
       type: "message",
+      targetName: researcherName,
     );
   }
 
   static void clearMessages() {
     messages.clear();
     threads.clear();
-
-    NotificationService.addNotification(
-      title: "Messages Cleared",
-      body: "All local research conversations have been cleared.",
-      type: "message",
-    );
   }
 }

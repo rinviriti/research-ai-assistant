@@ -7,6 +7,8 @@ class NotificationService {
     required String title,
     required String body,
     required String type,
+    String? targetId,
+    String? targetName,
   }) {
     notifications.insert(
       0,
@@ -15,12 +17,18 @@ class NotificationService {
         body: body,
         type: type,
         timeAgo: "Just now",
+        targetId: targetId,
+        targetName: targetName,
       ),
     );
   }
 
   static int unreadCount() {
-    return notifications.where((n) => !n.isRead).length;
+    return notifications.where((notification) => !notification.isRead).length;
+  }
+
+  static void markAsRead(NotificationModel notification) {
+    notification.isRead = true;
   }
 
   static void markAllAsRead() {

@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../models/notification_model.dart';
 import '../../../services/notification_service.dart';
 
+import '../../connections/screens/connections_screen.dart';
+import '../../feed/screens/post_detail_screen.dart';
 import '../../feed/screens/research_feed_screen.dart';
 import '../../matching/screens/research_matches_screen.dart';
 import '../../messaging/screens/research_messages_screen.dart';
-import '../../connections/screens/connections_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -42,8 +43,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   void openNotification(NotificationModel notification) {
     setState(() {
-      notification.isRead = true;
+      NotificationService.markAsRead(notification);
     });
+
+    if ((notification.type == "post" || notification.type == "comment") &&
+        notification.targetId != null &&
+        notification.targetId!.isNotEmpty) {
+      openScreen(PostDetailScreen(postId: notification.targetId!));
+      return;
+    }
 
     if (notification.type == "post" || notification.type == "comment") {
       openScreen(const ResearchFeedScreen());
@@ -118,9 +126,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 size: 26,
               ),
             ),
-
             const SizedBox(width: 14),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,16 +154,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ),
                     ],
                   ),
-
                   const SizedBox(height: 7),
-
                   Text(
                     notification.body,
                     style: const TextStyle(color: Colors.white70, height: 1.45),
                   ),
-
+                  if (notification.targetName != null &&
+                      notification.targetName!.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      "Related to: ${notification.targetName}",
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 10),
-
                   Row(
                     children: [
                       Text(
@@ -303,18 +317,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
                 const Text(
-                  "Tap any notification to open the related research activity.",
+                  "Tap any notification to open the exact related research activity.",
                   style: TextStyle(color: Colors.white70, height: 1.5),
                 ),
-
                 const SizedBox(height: 24),
-
                 statsHeader(),
-
                 ...notifications.map(notificationCard),
               ],
             ),

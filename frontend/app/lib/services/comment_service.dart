@@ -26,6 +26,8 @@ class CommentService {
       title: "New Research Comment",
       body: "$commenter commented on a research discussion.",
       type: "comment",
+      targetId: postId,
+      targetName: commenter,
     );
   }
 

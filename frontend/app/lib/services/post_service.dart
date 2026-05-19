@@ -1,4 +1,5 @@
 import '../models/post_model.dart';
+import 'notification_service.dart';
 
 class PostService {
   static final List<PostModel> posts = [
@@ -13,6 +14,7 @@ class PostService {
       timeAgo: "2h ago",
       likes: 12,
     ),
+
     PostModel(
       postId: "post_002",
       author: "Dr. Aiko Tanaka",
@@ -24,21 +26,18 @@ class PostService {
       timeAgo: "5h ago",
       likes: 31,
     ),
-    PostModel(
-      postId: "post_003",
-      author: "Md. Rahat Hossain",
-      university: "BUET",
-      content:
-          "Can anyone suggest good datasets for real-time bronchoscopy lesion detection research?",
-      type: "Research Question",
-      tags: ["Bronchoscopy", "YOLO", "Computer Vision"],
-      timeAgo: "8h ago",
-      likes: 7,
-    ),
   ];
 
   static void addPost(PostModel post) {
     posts.insert(0, post);
+
+    NotificationService.addNotification(
+      title: "Research Post Created",
+      body: "${post.author} published a new research post.",
+      type: "post",
+      targetId: post.postId,
+      targetName: post.author,
+    );
   }
 
   static void toggleLike(String postId) {
@@ -54,6 +53,26 @@ class PostService {
     } else {
       post.likes++;
       post.isLiked = true;
+
+      NotificationService.addNotification(
+        title: "Research Post Liked",
+        body: "You reacted to a research discussion.",
+        type: "post",
+        targetId: post.postId,
+        targetName: post.author,
+      );
     }
+  }
+
+  static PostModel? getPostById(String postId) {
+    try {
+      return posts.firstWhere((post) => post.postId == postId);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static void clearPosts() {
+    posts.clear();
   }
 }
