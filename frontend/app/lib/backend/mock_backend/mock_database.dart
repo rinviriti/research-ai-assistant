@@ -8,6 +8,7 @@ class MockDatabase {
     "messages": [],
     "chatThreads": [],
     "notifications": [],
+    "shares": [],
   };
 
   static Future<void> addDocument({

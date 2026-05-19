@@ -6,6 +6,7 @@ import 'repositories/messaging_backend_repository.dart';
 import 'repositories/notification_backend_repository.dart';
 import 'repositories/post_backend_repository.dart';
 import 'repositories/profile_backend_repository.dart';
+import 'repositories/share_backend_repository.dart';
 
 class BackendProvider {
   static final auth = AuthBackendRepository();
@@ -23,4 +24,6 @@ class BackendProvider {
   static final notifications = NotificationBackendRepository();
 
   static final connections = ConnectionBackendRepository();
+
+  static final shares = ShareBackendRepository();
 }

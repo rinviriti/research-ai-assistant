@@ -16,6 +16,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
   final postController = TextEditingController();
   final tagController = TextEditingController();
   final commentController = TextEditingController();
+  final quoteController = TextEditingController();
 
   String selectedPostType = "Research Question";
 
@@ -61,6 +62,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
     postController.dispose();
     tagController.dispose();
     commentController.dispose();
+    quoteController.dispose();
     super.dispose();
   }
 
@@ -71,11 +73,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
         .where((tag) => tag.isNotEmpty)
         .toList();
 
-    if (tags.isEmpty) {
-      return ["Research"];
-    }
-
-    return tags;
+    return tags.isEmpty ? ["Research"] : tags;
   }
 
   Future<void> createPost() async {
@@ -121,7 +119,6 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
 
   Future<void> setReaction(PostModel post, String reactionType) async {
     PostService.setReaction(postId: post.postId, reactionType: reactionType);
-
     await loadPosts();
   }
 
@@ -210,6 +207,127 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
                     ),
                   );
                 }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void showShareSheet(PostModel post) {
+    quoteController.clear();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 22,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 55,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Share Research Post",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Add your thoughts and repost this research update to your feed.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70, height: 1.4),
+              ),
+              const SizedBox(height: 18),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      post.author,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      post.content,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: quoteController,
+                maxLines: 4,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                  hintText: "Add a quote or your research thoughts...",
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    await BackendProvider.shares.sharePost(
+                      post: post,
+                      sharedBy: "You",
+                      quote: quoteController.text.trim(),
+                    );
+
+                    if (!mounted) return;
+
+                    Navigator.pop(context);
+                    await loadPosts();
+
+                    if (!mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Post shared to your feed 🚀"),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.repeat),
+                  label: const Text("Share to Feed"),
+                ),
               ),
             ],
           ),
@@ -710,7 +828,6 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
 
   String reactionButtonLabel(PostModel post) {
     if (post.currentReaction.isEmpty) return "React";
-
     return PostService.reactionLabel(post.currentReaction);
   }
 
@@ -740,159 +857,162 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
 
     return FutureBuilder<int>(
       future: BackendProvider.comments.commentCount(post.postId),
-      builder: (context, snapshot) {
-        final commentCount = snapshot.data ?? 0;
+      builder: (context, commentSnapshot) {
+        final commentCount = commentSnapshot.data ?? 0;
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: Colors.white10),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        return FutureBuilder<int>(
+          future: BackendProvider.shares.shareCount(post.postId),
+          builder: (context, shareSnapshot) {
+            final shareCount = shareSnapshot.data ?? 0;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(color: Colors.white10),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 27,
-                      backgroundColor: primary,
-                      child: Text(
-                        post.author.substring(0, 1),
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 22,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            post.author,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 17,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            post.university,
-                            style: const TextStyle(
-                              color: Colors.white60,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                    Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: primary.withOpacity(0.14),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
+                        CircleAvatar(
+                          radius: 27,
+                          backgroundColor: primary,
                           child: Text(
-                            post.type,
-                            style: TextStyle(
-                              color: primary,
-                              fontSize: 11,
+                            post.author.substring(0, 1),
+                            style: const TextStyle(
+                              color: Colors.black,
                               fontWeight: FontWeight.bold,
+                              fontSize: 22,
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          post.timeAgo,
-                          style: const TextStyle(
-                            color: Colors.white38,
-                            fontSize: 11,
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                post.author,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                post.university,
+                                style: const TextStyle(
+                                  color: Colors.white60,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
                           ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: primary.withOpacity(0.14),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                post.type,
+                                style: TextStyle(
+                                  color: primary,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              post.timeAgo,
+                              style: const TextStyle(
+                                color: Colors.white38,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  post.content,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    height: 1.55,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Wrap(children: post.tags.map(tagChip).toList()),
-                const SizedBox(height: 18),
-                Row(
-                  children: [
-                    reactionSummary(post),
-                    const Spacer(),
+                    const SizedBox(height: 18),
                     Text(
-                      "$commentCount comments",
-                      style: const TextStyle(color: Colors.white60),
+                      post.content,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        height: 1.55,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Wrap(children: post.tags.map(tagChip).toList()),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        reactionSummary(post),
+                        const Spacer(),
+                        Text(
+                          "$commentCount comments • $shareCount shares",
+                          style: const TextStyle(color: Colors.white60),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    const Divider(color: Colors.white10),
+                    Row(
+                      children: [
+                        actionButton(
+                          icon: reactionButtonIcon(post),
+                          label: reactionButtonLabel(post),
+                          color: reactionButtonColor(post),
+                          onTap: () {
+                            setReaction(post, "like");
+                          },
+                          onLongPress: () {
+                            showReactionPicker(post);
+                          },
+                        ),
+                        actionButton(
+                          icon: Icons.comment_outlined,
+                          label: "Comment",
+                          color: Colors.white60,
+                          onTap: () {
+                            showCommentSheet(post);
+                          },
+                        ),
+                        actionButton(
+                          icon: Icons.repeat,
+                          label: "Share",
+                          color: Colors.white60,
+                          onTap: () {
+                            showShareSheet(post);
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      "Long press React to choose Support, Celebrate, Insightful, or Applaud.",
+                      style: TextStyle(color: Colors.white38, fontSize: 11),
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-                const Divider(color: Colors.white10),
-                Row(
-                  children: [
-                    actionButton(
-                      icon: reactionButtonIcon(post),
-                      label: reactionButtonLabel(post),
-                      color: reactionButtonColor(post),
-                      onTap: () {
-                        setReaction(post, "like");
-                      },
-                      onLongPress: () {
-                        showReactionPicker(post);
-                      },
-                    ),
-                    actionButton(
-                      icon: Icons.comment_outlined,
-                      label: "Comment",
-                      color: Colors.white60,
-                      onTap: () {
-                        showCommentSheet(post);
-                      },
-                    ),
-                    actionButton(
-                      icon: Icons.share_outlined,
-                      label: "Share",
-                      color: Colors.white60,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Share feature coming soon."),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  "Long press React to choose Support, Celebrate, Insightful, or Applaud.",
-                  style: TextStyle(color: Colors.white38, fontSize: 11),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
