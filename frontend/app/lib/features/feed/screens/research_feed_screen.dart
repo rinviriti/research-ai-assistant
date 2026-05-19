@@ -4,6 +4,7 @@ import '../../../backend/backend_provider.dart';
 import '../../../models/comment_model.dart';
 import '../../../models/post_model.dart';
 import '../../../services/post_service.dart';
+import '../../researchers/screens/researcher_profile_preview_screen.dart';
 
 class ResearchFeedScreen extends StatefulWidget {
   const ResearchFeedScreen({super.key});
@@ -902,37 +903,62 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
                       children: [
                         Row(
                           children: [
-                            CircleAvatar(
-                              radius: 27,
-                              backgroundColor: primary,
-                              child: Text(
-                                post.author.substring(0, 1),
-                                style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 22,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                            InkWell(
+                              borderRadius: BorderRadius.circular(18),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ResearcherProfilePreviewScreen(
+                                          name: post.author,
+                                          university: post.university,
+                                          interests: post.tags,
+                                        ),
+                                  ),
+                                );
+                              },
+                              child: Row(
                                 children: [
-                                  Text(
-                                    post.author,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17,
+                                  CircleAvatar(
+                                    radius: 27,
+                                    backgroundColor: primary,
+                                    child: Text(
+                                      post.author.substring(0, 1),
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 22,
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(height: 5),
-                                  Text(
-                                    post.university,
-                                    style: const TextStyle(
-                                      color: Colors.white60,
-                                      fontSize: 12,
+
+                                  const SizedBox(width: 14),
+
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          post.author,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 17,
+                                          ),
+                                        ),
+
+                                        const SizedBox(height: 5),
+
+                                        Text(
+                                          post.university,
+                                          style: const TextStyle(
+                                            color: Colors.white60,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
