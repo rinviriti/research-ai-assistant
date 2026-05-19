@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/researcher_model.dart';
 import '../../../services/swipe_match_service.dart';
+import 'research_matches_screen.dart';
 
 class SwipeMatchingScreen extends StatefulWidget {
   const SwipeMatchingScreen({super.key});
@@ -23,6 +24,13 @@ class _SwipeMatchingScreenState extends State<SwipeMatchingScreen> {
     setState(() {
       researchers = SwipeMatchService.getAvailableResearchers();
     });
+  }
+
+  void openMatches() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ResearchMatchesScreen()),
+    ).then((_) => setState(() {}));
   }
 
   void likeResearcher(ResearcherModel researcher) {
@@ -47,6 +55,65 @@ class _SwipeMatchingScreenState extends State<SwipeMatchingScreen> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text("Swipe matches reset.")));
+  }
+
+  Widget matchesShortcutCard() {
+    final primary = Theme.of(context).colorScheme.primary;
+    final matchCount = SwipeMatchService.matches.length;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(22),
+      onTap: openMatches,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Row(
+          children: [
+            Container(
+              height: 48,
+              width: 48,
+              decoration: BoxDecoration(
+                color: Colors.pinkAccent.withOpacity(0.16),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(
+                Icons.favorite_border,
+                color: Colors.pinkAccent,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Research Matches",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    matchCount == 0
+                        ? "No interested matches yet"
+                        : "$matchCount interested researchers",
+                    style: const TextStyle(color: Colors.white60, fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, color: primary, size: 18),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget tagChip(String text) {
@@ -74,42 +141,49 @@ class _SwipeMatchingScreenState extends State<SwipeMatchingScreen> {
   Widget emptyState() {
     final primary = Theme.of(context).colorScheme.primary;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.manage_search, color: primary, size: 86),
-            const SizedBox(height: 20),
-            const Text(
-              "No more researchers",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
+    return Column(
+      children: [
+        matchesShortcutCard(),
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.manage_search, color: primary, size: 86),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "No more researchers",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "You have reviewed all available researcher profiles. Reset swipes to explore them again.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70, height: 1.5),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: 220,
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: resetSwipes,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text("Reset Swipes"),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 10),
-            const Text(
-              "You have reviewed all available researcher profiles. Reset swipes to explore them again.",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, height: 1.5),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: 220,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: resetSwipes,
-                icon: const Icon(Icons.refresh),
-                label: const Text("Reset Swipes"),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -185,9 +259,7 @@ class _SwipeMatchingScreenState extends State<SwipeMatchingScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 22),
-
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -213,9 +285,7 @@ class _SwipeMatchingScreenState extends State<SwipeMatchingScreen> {
               ],
             ),
           ),
-
           const SizedBox(height: 22),
-
           Text(
             researcher.bio,
             style: const TextStyle(
@@ -224,9 +294,7 @@ class _SwipeMatchingScreenState extends State<SwipeMatchingScreen> {
               fontSize: 15,
             ),
           ),
-
           const SizedBox(height: 22),
-
           const Text(
             "Research Interests",
             style: TextStyle(
@@ -235,80 +303,24 @@ class _SwipeMatchingScreenState extends State<SwipeMatchingScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 12),
-
           Wrap(children: researcher.interests.map(tagChip).toList()),
-
-          const SizedBox(height: 18),
-
-          const Text(
-            "Skills",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          Wrap(children: researcher.skills.map(tagChip).toList()),
-
-          const SizedBox(height: 22),
-
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              color: Theme.of(context).scaffoldBackgroundColor,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white10),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.search, color: primary),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    researcher.lookingFor,
-                    style: const TextStyle(color: Colors.white70, height: 1.4),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 26),
-
+          const SizedBox(height: 24),
           Row(
             children: [
               Expanded(
-                child: SizedBox(
-                  height: 55,
-                  child: OutlinedButton.icon(
-                    onPressed: () => skipResearcher(researcher),
-                    icon: const Icon(Icons.close),
-                    label: const Text("Skip"),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                      side: const BorderSide(color: Colors.redAccent),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                    ),
-                  ),
+                child: OutlinedButton.icon(
+                  onPressed: () => skipResearcher(researcher),
+                  icon: const Icon(Icons.close),
+                  label: const Text("Skip"),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
-                child: SizedBox(
-                  height: 55,
-                  child: ElevatedButton.icon(
-                    onPressed: () => likeResearcher(researcher),
-                    icon: const Icon(Icons.favorite),
-                    label: const Text("Interested"),
-                  ),
+                child: ElevatedButton.icon(
+                  onPressed: () => likeResearcher(researcher),
+                  icon: const Icon(Icons.favorite),
+                  label: const Text("Interested"),
                 ),
               ),
             ],
@@ -318,72 +330,46 @@ class _SwipeMatchingScreenState extends State<SwipeMatchingScreen> {
     );
   }
 
-  Widget matchStatsHeader() {
-    final primary = Theme.of(context).colorScheme.primary;
-    final totalMatches = SwipeMatchService.matches.length;
+  Widget content() {
+    if (researchers.isEmpty) {
+      return emptyState();
+    }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 22),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.favorite, color: primary, size: 30),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              "$totalMatches interested match${totalMatches == 1 ? "" : "es"} saved",
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+    final researcher = researchers.first;
+
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        matchesShortcutCard(),
+        const Text(
+          "Swipe Match",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
           ),
-          TextButton.icon(
-            onPressed: resetSwipes,
-            icon: const Icon(Icons.refresh),
-            label: const Text("Reset"),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          "Discover researchers, supervisors, and collaborators based on your academic interests.",
+          style: TextStyle(color: Colors.white70, height: 1.5),
+        ),
+        const SizedBox(height: 24),
+        researcherCard(researcher),
+        TextButton.icon(
+          onPressed: resetSwipes,
+          icon: const Icon(Icons.refresh),
+          label: const Text("Reset Swipes"),
+        ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentResearcher = researchers.isNotEmpty ? researchers.first : null;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(title: const Text("Swipe Match")),
-      body: currentResearcher == null
-          ? emptyState()
-          : ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                const Text(
-                  "Research Swipe Match",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  "Discover supervisors, collaborators, and research friends based on academic interests.",
-                  style: TextStyle(color: Colors.white70, height: 1.5),
-                ),
-                const SizedBox(height: 24),
-                matchStatsHeader(),
-                researcherCard(currentResearcher),
-              ],
-            ),
+      body: content(),
     );
   }
 }

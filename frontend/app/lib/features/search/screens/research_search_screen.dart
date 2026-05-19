@@ -8,7 +8,9 @@ import '../../feed/screens/post_detail_screen.dart';
 import '../../messaging/screens/research_chat_detail_screen.dart';
 
 class ResearchSearchScreen extends StatefulWidget {
-  const ResearchSearchScreen({super.key});
+  final bool autoFocus;
+
+  const ResearchSearchScreen({super.key, this.autoFocus = false});
 
   @override
   State<ResearchSearchScreen> createState() => _ResearchSearchScreenState();
@@ -414,6 +416,7 @@ class _ResearchSearchScreenState extends State<ResearchSearchScreen> {
       controller: searchController,
       style: const TextStyle(color: Colors.white),
       onChanged: performSearch,
+      autofocus: widget.autoFocus,
       decoration: InputDecoration(
         hintText: "Search posts, tags, authors, researchers...",
         prefixIcon: const Icon(Icons.search),
