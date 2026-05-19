@@ -1,6 +1,7 @@
 import '../../models/research_message_model.dart';
 import '../../models/research_thread_model.dart';
 import '../../services/research_messaging_service.dart';
+import '../../services/time_formatter_service.dart';
 import '../mock_backend/mock_database.dart';
 
 class MessagingBackendRepository {
@@ -21,6 +22,8 @@ class MessagingBackendRepository {
       university: university,
     );
 
+    final now = DateTime.now();
+
     await MockDatabase.addDocument(
       collection: "chatThreads",
       data: {
@@ -28,7 +31,7 @@ class MessagingBackendRepository {
         "researcherName": researcherName,
         "university": university,
         "lastMessage": "Start a research conversation.",
-        "timeAgo": "Just now",
+        "updatedAt": now.toIso8601String(),
         "unreadCount": 0,
       },
     );
@@ -40,6 +43,8 @@ class MessagingBackendRepository {
     required String message,
     bool isMe = true,
   }) async {
+    final now = DateTime.now();
+
     ResearchMessagingService.sendMessage(
       researcherName: researcherName,
       university: university,
@@ -50,13 +55,13 @@ class MessagingBackendRepository {
     await MockDatabase.addDocument(
       collection: "messages",
       data: {
-        "messageId": DateTime.now().microsecondsSinceEpoch.toString(),
+        "messageId": now.microsecondsSinceEpoch.toString(),
         "threadId": ResearchMessagingService.threadId(researcherName),
         "researcherName": researcherName,
         "university": university,
         "senderName": isMe ? "You" : researcherName,
         "message": message,
-        "timeAgo": "Just now",
+        "createdAt": now.toIso8601String(),
         "isMe": isMe,
       },
     );
@@ -76,7 +81,7 @@ class MessagingBackendRepository {
       "researcherName": thread.researcherName,
       "university": thread.university,
       "lastMessage": thread.lastMessage,
-      "timeAgo": thread.timeAgo,
+      "updatedAt": thread.updatedAt.toIso8601String(),
       "unreadCount": thread.unreadCount,
     };
   }
@@ -87,7 +92,7 @@ class MessagingBackendRepository {
       researcherName: data["researcherName"] ?? "",
       university: data["university"] ?? "",
       lastMessage: data["lastMessage"] ?? "",
-      timeAgo: data["timeAgo"] ?? "",
+      updatedAt: TimeFormatterService.parse(data["updatedAt"]),
       unreadCount: data["unreadCount"] ?? 0,
     );
   }
@@ -97,7 +102,7 @@ class MessagingBackendRepository {
       "messageId": message.messageId,
       "senderName": message.senderName,
       "message": message.message,
-      "timeAgo": message.timeAgo,
+      "createdAt": message.createdAt.toIso8601String(),
       "isMe": message.isMe,
     };
   }
@@ -107,7 +112,7 @@ class MessagingBackendRepository {
       messageId: data["messageId"] ?? "",
       senderName: data["senderName"] ?? "",
       message: data["message"] ?? "",
-      timeAgo: data["timeAgo"] ?? "",
+      createdAt: TimeFormatterService.parse(data["createdAt"]),
       isMe: data["isMe"] ?? false,
     );
   }
