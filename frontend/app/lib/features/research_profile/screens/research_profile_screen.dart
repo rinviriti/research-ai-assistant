@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../../../models/research_profile_model.dart';
 import '../../../services/research_profile_service.dart';
+
 import 'edit_research_profile_screen.dart';
 
 class ResearchProfileScreen extends StatefulWidget {
@@ -23,52 +26,66 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
   Future<void> loadProfile() async {
     await ResearchProfileService.loadProfile();
 
+    if (!mounted) return;
+
     setState(() {
       profile = ResearchProfileService.currentProfile;
     });
   }
 
-  Widget tagChip(String text) {
-    final primary = Theme.of(context).colorScheme.primary;
-
-    return Container(
-      margin: const EdgeInsets.only(right: 8, bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: primary.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: primary.withOpacity(0.35)),
+  void openEditProfile() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const EditResearchProfileScreen(),
       ),
+    );
+
+    await loadProfile();
+  }
+
+  Widget sectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 28, bottom: 14),
       child: Text(
-        text,
-        style: TextStyle(
-          color: primary,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
+        title,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
   }
 
   Widget infoCard({
-    required IconData icon,
     required String title,
     required String value,
+    required IconData icon,
   }) {
     final primary = Theme.of(context).colorScheme.primary;
 
     return Container(
+      width: double.infinity,
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: Colors.white10),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: primary),
+          Container(
+            height: 46,
+            width: 46,
+            decoration: BoxDecoration(
+              color: primary.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(icon, color: primary),
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -76,15 +93,16 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   value.isEmpty ? "Not added yet" : value,
-                  style: const TextStyle(color: Colors.white70, height: 1.45),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -94,112 +112,143 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
     );
   }
 
-  Widget section({
-    required String title,
-    required List<String> items,
-    required IconData icon,
-  }) {
+  Widget chipList(List<String> items) {
     final primary = Theme.of(context).colorScheme.primary;
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 18),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: primary),
-              const SizedBox(width: 10),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 19,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+    if (items.isEmpty) {
+      return const Text(
+        "No data added yet.",
+        style: TextStyle(color: Colors.white54),
+      );
+    }
+
+    return Wrap(
+      children: items.map((item) {
+        return Container(
+          margin: const EdgeInsets.only(right: 10, bottom: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+          decoration: BoxDecoration(
+            color: primary.withOpacity(0.14),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: primary.withOpacity(0.30)),
           ),
-          const SizedBox(height: 14),
-          items.isEmpty
-              ? const Text(
-                  "No information added yet.",
-                  style: TextStyle(color: Colors.white60),
-                )
-              : Wrap(children: items.map(tagChip).toList()),
-        ],
+          child: Text(
+            item,
+            style: TextStyle(color: primary, fontWeight: FontWeight.w600),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget emptyProfile() {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(26),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 55,
+              backgroundColor: primary.withOpacity(0.18),
+              child: Icon(
+                Icons.account_circle_outlined,
+                size: 70,
+                color: primary,
+              ),
+            ),
+            const SizedBox(height: 22),
+            const Text(
+              "No Research Profile Yet",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 27,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              "Create your academic identity to unlock researcher matching, collaboration, messaging, and research networking features.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70, height: 1.5),
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton.icon(
+                onPressed: openEditProfile,
+                icon: const Icon(Icons.add),
+                label: const Text("Create Research Profile"),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget profileHeader(ResearchProfileModel p) {
+  Widget profileHeader() {
     final primary = Theme.of(context).colorScheme.primary;
-    final secondary = Theme.of(context).colorScheme.secondary;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            primary.withOpacity(0.25),
-            secondary.withOpacity(0.15),
-            Theme.of(context).cardColor,
-          ],
-        ),
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(color: Colors.white10),
       ),
       child: Column(
         children: [
           CircleAvatar(
-            radius: 46,
+            radius: 56,
             backgroundColor: primary,
-            child: Text(
-              p.name.isEmpty ? "R" : p.name.substring(0, 1),
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 38,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            backgroundImage: profile!.profileImagePath.isNotEmpty
+                ? MemoryImage(base64Decode(profile!.profileImagePath))
+                : null,
+            child: profile!.profileImagePath.isEmpty
+                ? const Icon(
+                    Icons.account_circle,
+                    color: Colors.black,
+                    size: 65,
+                  )
+                : null,
           ),
           const SizedBox(height: 18),
           Text(
-            p.name,
+            profile!.name,
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 27,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            profile!.university,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white70, fontSize: 15),
+          ),
           const SizedBox(height: 6),
           Text(
-            p.department,
+            profile!.department,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white70),
+            style: const TextStyle(color: Colors.white54, fontSize: 13),
           ),
-          const SizedBox(height: 4),
-          Text(
-            p.university,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white54),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            p.bio,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white70, height: 1.55),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: openEditProfile,
+              icon: const Icon(Icons.edit),
+              label: const Text("Edit Research Profile"),
+            ),
           ),
         ],
       ),
@@ -208,96 +257,89 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final p = profile;
+    if (profile == null) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(title: const Text("Research Profile")),
+        body: emptyProfile(),
+      );
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text("Research Profile"),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              final updated = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const EditResearchProfileScreen(),
-                ),
-              );
+      appBar: AppBar(title: const Text("Research Profile")),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          profileHeader(),
 
-              if (updated == true) {
-                loadProfile();
-              }
-            },
-            icon: const Icon(Icons.edit),
+          sectionTitle("About"),
+
+          infoCard(
+            title: "Research Bio",
+            value: profile!.bio,
+            icon: Icons.description_outlined,
           ),
+
+          infoCard(
+            title: "Location",
+            value: profile!.location,
+            icon: Icons.location_on_outlined,
+          ),
+
+          infoCard(
+            title: "Looking For",
+            value: profile!.lookingFor,
+            icon: Icons.search,
+          ),
+
+          sectionTitle("Research Interests"),
+
+          chipList(profile!.researchInterests),
+
+          sectionTitle("Skills"),
+
+          chipList(profile!.skills),
+
+          sectionTitle("Academic Work"),
+
+          infoCard(
+            title: "Publications",
+            value: profile!.publications.join(", "),
+            icon: Icons.article_outlined,
+          ),
+
+          infoCard(
+            title: "Projects",
+            value: profile!.projects.join(", "),
+            icon: Icons.work_outline,
+          ),
+
+          sectionTitle("Academic Links"),
+
+          infoCard(
+            title: "Email",
+            value: profile!.email,
+            icon: Icons.email_outlined,
+          ),
+
+          infoCard(
+            title: "Google Scholar",
+            value: profile!.googleScholar,
+            icon: Icons.school_outlined,
+          ),
+
+          infoCard(title: "GitHub", value: profile!.github, icon: Icons.code),
+
+          infoCard(
+            title: "LinkedIn",
+            value: profile!.linkedIn,
+            icon: Icons.business_center_outlined,
+          ),
+
+          const SizedBox(height: 30),
         ],
       ),
-      body: p == null
-          ? Center(
-              child: CircularProgressIndicator(
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            )
-          : ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                profileHeader(p),
-
-                const SizedBox(height: 22),
-
-                infoCard(
-                  icon: Icons.location_on_outlined,
-                  title: "Location",
-                  value: p.location,
-                ),
-
-                infoCard(
-                  icon: Icons.search,
-                  title: "Looking For",
-                  value: p.lookingFor,
-                ),
-
-                infoCard(
-                  icon: Icons.email_outlined,
-                  title: "Email",
-                  value: p.email,
-                ),
-
-                section(
-                  title: "Research Interests",
-                  items: p.researchInterests,
-                  icon: Icons.psychology_outlined,
-                ),
-
-                section(title: "Skills", items: p.skills, icon: Icons.code),
-
-                section(
-                  title: "Publications",
-                  items: p.publications,
-                  icon: Icons.article_outlined,
-                ),
-
-                section(
-                  title: "Projects",
-                  items: p.projects,
-                  icon: Icons.work_outline,
-                ),
-
-                infoCard(
-                  icon: Icons.school_outlined,
-                  title: "Google Scholar",
-                  value: p.googleScholar,
-                ),
-
-                infoCard(icon: Icons.link, title: "GitHub", value: p.github),
-
-                infoCard(
-                  icon: Icons.business_center_outlined,
-                  title: "LinkedIn",
-                  value: p.linkedIn,
-                ),
-              ],
-            ),
     );
   }
 }

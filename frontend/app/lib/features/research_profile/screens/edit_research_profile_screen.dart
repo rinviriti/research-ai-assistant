@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../../../constants/research_options.dart';
 import '../../../models/research_profile_model.dart';
+import '../../../services/media_service.dart';
 import '../../../services/research_profile_service.dart';
 
 class EditResearchProfileScreen extends StatefulWidget {
@@ -30,6 +33,8 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
 
   List<String> selectedInterests = [];
   List<String> selectedSkills = [];
+
+  String profileImagePath = "";
 
   @override
   void initState() {
@@ -64,8 +69,19 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     googleScholarController.text = profile.googleScholar;
     githubController.text = profile.github;
     linkedInController.text = profile.linkedIn;
+    profileImagePath = profile.profileImagePath;
 
     if (mounted) setState(() {});
+  }
+
+  Future<void> pickProfileImage() async {
+    final imageBase64 = await MediaService.pickImageBase64();
+
+    if (imageBase64 == null) return;
+
+    setState(() {
+      profileImagePath = imageBase64;
+    });
   }
 
   List<String> splitList(String text) {
@@ -138,6 +154,7 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
       googleScholar: googleScholarController.text.trim(),
       github: githubController.text.trim(),
       linkedIn: linkedInController.text.trim(),
+      profileImagePath: profileImagePath,
     );
 
     await ResearchProfileService.saveProfile(updatedProfile);
@@ -149,6 +166,31 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     );
 
     Navigator.pop(context, true);
+  }
+
+  Widget profileImageSection() {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 48,
+          backgroundColor: primary,
+          backgroundImage: profileImagePath.isNotEmpty
+              ? MemoryImage(base64Decode(profileImagePath))
+              : null,
+          child: profileImagePath.isEmpty
+              ? const Icon(Icons.account_circle, color: Colors.black, size: 58)
+              : null,
+        ),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          onPressed: pickProfileImage,
+          icon: const Icon(Icons.photo_camera_outlined),
+          label: const Text("Upload Profile Photo"),
+        ),
+      ],
+    );
   }
 
   Widget sectionTitle(String title, String subtitle) {
@@ -205,8 +247,10 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        // ignore: deprecated_member_use
         color: primary.withOpacity(0.10),
         borderRadius: BorderRadius.circular(18),
+        // ignore: deprecated_member_use
         border: Border.all(color: primary.withOpacity(0.30)),
       ),
       child: Row(
@@ -293,8 +337,10 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
                   vertical: 7,
                 ),
                 decoration: BoxDecoration(
+                  // ignore: deprecated_member_use
                   color: primary.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(30),
+                  // ignore: deprecated_member_use
                   border: Border.all(color: primary.withOpacity(0.35)),
                 ),
                 child: Text(
@@ -347,7 +393,6 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
     final hasExistingProfile = ResearchProfileService.currentProfile != null;
 
     return Scaffold(
@@ -373,15 +418,7 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
               ),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 42,
-                    backgroundColor: primary,
-                    child: const Icon(
-                      Icons.account_circle,
-                      color: Colors.black,
-                      size: 50,
-                    ),
-                  ),
+                  profileImageSection(),
                   const SizedBox(height: 16),
                   Text(
                     hasExistingProfile

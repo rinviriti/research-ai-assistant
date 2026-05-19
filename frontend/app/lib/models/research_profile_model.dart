@@ -14,6 +14,9 @@ class ResearchProfileModel {
   final String github;
   final String linkedIn;
 
+  // NEW
+  final String profileImagePath;
+
   ResearchProfileModel({
     required this.name,
     required this.email,
@@ -29,6 +32,9 @@ class ResearchProfileModel {
     required this.googleScholar,
     required this.github,
     required this.linkedIn,
+
+    // NEW
+    required this.profileImagePath,
   });
 
   Map<String, dynamic> toJson() {
@@ -47,6 +53,9 @@ class ResearchProfileModel {
       "googleScholar": googleScholar,
       "github": github,
       "linkedIn": linkedIn,
+
+      // NEW
+      "profileImagePath": profileImagePath,
     };
   }
 
@@ -66,6 +75,45 @@ class ResearchProfileModel {
       googleScholar: json["googleScholar"] ?? "",
       github: json["github"] ?? "",
       linkedIn: json["linkedIn"] ?? "",
+
+      // NEW
+      profileImagePath: json["profileImagePath"] ?? "",
+    );
+  }
+
+  ResearchProfileModel copyWith({
+    String? name,
+    String? email,
+    String? university,
+    String? department,
+    String? bio,
+    String? location,
+    String? lookingFor,
+    List<String>? researchInterests,
+    List<String>? skills,
+    List<String>? publications,
+    List<String>? projects,
+    String? googleScholar,
+    String? github,
+    String? linkedIn,
+    String? profileImagePath,
+  }) {
+    return ResearchProfileModel(
+      name: name ?? this.name,
+      email: email ?? this.email,
+      university: university ?? this.university,
+      department: department ?? this.department,
+      bio: bio ?? this.bio,
+      location: location ?? this.location,
+      lookingFor: lookingFor ?? this.lookingFor,
+      researchInterests: researchInterests ?? this.researchInterests,
+      skills: skills ?? this.skills,
+      publications: publications ?? this.publications,
+      projects: projects ?? this.projects,
+      googleScholar: googleScholar ?? this.googleScholar,
+      github: github ?? this.github,
+      linkedIn: linkedIn ?? this.linkedIn,
+      profileImagePath: profileImagePath ?? this.profileImagePath,
     );
   }
 }

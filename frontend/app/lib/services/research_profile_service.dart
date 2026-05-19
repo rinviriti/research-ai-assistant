@@ -27,6 +27,18 @@ class ResearchProfileService {
     await prefs.setString("research_profile", jsonEncode(profile.toJson()));
   }
 
+  static Future<void> updateProfileImage(String imagePath) async {
+    await loadProfile();
+
+    if (currentProfile == null) return;
+
+    final updatedProfile = currentProfile!.copyWith(
+      profileImagePath: imagePath,
+    );
+
+    await saveProfile(updatedProfile);
+  }
+
   static Future<void> deleteProfile() async {
     final prefs = await SharedPreferences.getInstance();
 
