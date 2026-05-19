@@ -7,6 +7,7 @@ import 'repositories/notification_backend_repository.dart';
 import 'repositories/post_backend_repository.dart';
 import 'repositories/profile_backend_repository.dart';
 import 'repositories/saved_post_backend_repository.dart';
+import 'repositories/search_backend_repository.dart';
 import 'repositories/share_backend_repository.dart';
 
 class BackendProvider {
@@ -29,4 +30,6 @@ class BackendProvider {
   static final shares = ShareBackendRepository();
 
   static final savedPosts = SavedPostBackendRepository();
+
+  static final search = SearchBackendRepository();
 }
