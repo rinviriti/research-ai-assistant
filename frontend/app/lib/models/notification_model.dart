@@ -3,8 +3,12 @@ class NotificationModel {
   final String body;
   final String type;
   final String timeAgo;
+
   final String? targetId;
   final String? targetName;
+
+  final Map<String, dynamic>? payload;
+
   bool isRead;
 
   NotificationModel({
@@ -14,6 +18,7 @@ class NotificationModel {
     required this.timeAgo,
     this.targetId,
     this.targetName,
+    this.payload,
     this.isRead = false,
   });
 }

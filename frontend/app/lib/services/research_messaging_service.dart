@@ -123,6 +123,7 @@ class ResearchMessagingService {
         type: "message",
         targetId: id,
         targetName: researcherName,
+        payload: {"researcherName": researcherName, "university": university},
       );
     }
 
