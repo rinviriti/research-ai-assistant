@@ -15,27 +15,5 @@ class ResearchMessageModel {
     required this.isMe,
   });
 
-  String get timeAgo {
-    return TimeFormatterService.format(createdAt);
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "messageId": messageId,
-      "senderName": senderName,
-      "message": message,
-      "createdAt": createdAt.toIso8601String(),
-      "isMe": isMe,
-    };
-  }
-
-  factory ResearchMessageModel.fromJson(Map<String, dynamic> json) {
-    return ResearchMessageModel(
-      messageId: json["messageId"] ?? "",
-      senderName: json["senderName"] ?? "",
-      message: json["message"] ?? "",
-      createdAt: TimeFormatterService.parse(json["createdAt"]),
-      isMe: json["isMe"] ?? false,
-    );
-  }
+  String get timeAgo => TimeFormatterService.format(createdAt);
 }

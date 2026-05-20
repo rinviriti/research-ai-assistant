@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/research_message_model.dart';
-import '../../../services/realtime_messaging_service.dart';
 import '../../../services/research_messaging_service.dart';
 
 class ResearchChatDetailScreen extends StatefulWidget {
@@ -33,6 +32,10 @@ class _ResearchChatDetailScreenState extends State<ResearchChatDetailScreen> {
     );
 
     ResearchMessagingService.markThreadAsRead(widget.researcherName);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      scrollToBottom();
+    });
   }
 
   @override
@@ -67,8 +70,64 @@ class _ResearchChatDetailScreenState extends State<ResearchChatDetailScreen> {
     );
 
     messageController.clear();
-
     scrollToBottom();
+  }
+
+  Widget chatHeader() {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        border: const Border(bottom: BorderSide(color: Colors.white10)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 28,
+            backgroundColor: primary,
+            child: Text(
+              widget.researcherName.substring(0, 1),
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 23,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.researcherName,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  widget.university,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white60, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.circle, color: Colors.greenAccent, size: 11),
+          const SizedBox(width: 7),
+          const Text(
+            "Online",
+            style: TextStyle(color: Colors.white60, fontSize: 13),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget messageBubble(ResearchMessageModel message) {
@@ -77,7 +136,7 @@ class _ResearchChatDetailScreenState extends State<ResearchChatDetailScreen> {
     return Align(
       alignment: message.isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 310),
+        constraints: const BoxConstraints(maxWidth: 320),
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
@@ -132,6 +191,22 @@ class _ResearchChatDetailScreenState extends State<ResearchChatDetailScreen> {
     );
   }
 
+  Widget messageList(List<ResearchMessageModel> messages) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      scrollToBottom();
+    });
+
+    if (messages.isEmpty) {
+      return emptyChat();
+    }
+
+    return ListView(
+      controller: scrollController,
+      padding: const EdgeInsets.all(16),
+      children: messages.map(messageBubble).toList(),
+    );
+  }
+
   Widget messageInput() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -165,62 +240,10 @@ class _ResearchChatDetailScreenState extends State<ResearchChatDetailScreen> {
     );
   }
 
-  Widget chatHeader() {
-    final primary = Theme.of(context).colorScheme.primary;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        border: const Border(bottom: BorderSide(color: Colors.white10)),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: primary,
-            child: Text(
-              widget.researcherName.substring(0, 1),
-              style: const TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.researcherName,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  widget.university,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.white60, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          const Icon(Icons.circle, color: Colors.greenAccent, size: 11),
-          const SizedBox(width: 6),
-          const Text(
-            "Online",
-            style: TextStyle(color: Colors.white60, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    ResearchMessagingService.markThreadAsRead(widget.researcherName);
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(title: const Text("Research Chat")),
@@ -229,25 +252,15 @@ class _ResearchChatDetailScreenState extends State<ResearchChatDetailScreen> {
           chatHeader(),
           Expanded(
             child: StreamBuilder<List<ResearchMessageModel>>(
-              stream: RealtimeMessagingService.messageStream(
+              stream: ResearchMessagingService.watchMessages(
+                widget.researcherName,
+              ),
+              initialData: ResearchMessagingService.getMessages(
                 widget.researcherName,
               ),
               builder: (context, snapshot) {
                 final messages = snapshot.data ?? [];
-
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  scrollToBottom();
-                });
-
-                if (messages.isEmpty) {
-                  return emptyChat();
-                }
-
-                return ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(16),
-                  children: messages.map(messageBubble).toList(),
-                );
+                return messageList(messages);
               },
             ),
           ),

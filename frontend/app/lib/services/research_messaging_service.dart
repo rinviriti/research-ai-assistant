@@ -5,7 +5,6 @@ import 'realtime_messaging_service.dart';
 
 class ResearchMessagingService {
   static final List<ResearchThreadModel> threads = [];
-
   static final Map<String, List<ResearchMessageModel>> messages = {};
 
   static String threadId(String researcherName) {
@@ -35,22 +34,46 @@ class ResearchMessagingService {
 
       messages[id] = [];
     }
+
+    syncThreads();
+    syncMessages(researcherName);
   }
 
   static List<ResearchThreadModel> getThreads() {
     threads.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-
-    return threads;
+    return List<ResearchThreadModel>.from(threads);
   }
 
   static List<ResearchMessageModel> getMessages(String researcherName) {
     final id = threadId(researcherName);
-
     final threadMessages = messages[id] ?? [];
 
     threadMessages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
-    return threadMessages;
+    return List<ResearchMessageModel>.from(threadMessages);
+  }
+
+  static Stream<List<ResearchThreadModel>> watchThreads() {
+    Future.microtask(syncThreads);
+    return RealtimeMessagingService.threadStream;
+  }
+
+  static Stream<List<ResearchMessageModel>> watchMessages(
+    String researcherName,
+  ) {
+    Future.microtask(() => syncMessages(researcherName));
+    return RealtimeMessagingService.messageStream(researcherName);
+  }
+
+  static void syncThreads() {
+    RealtimeMessagingService.notifyThreads(getThreads());
+  }
+
+  static void syncMessages(String researcherName) {
+    RealtimeMessagingService.notifyMessages(
+      researcherName: researcherName,
+      messages: getMessages(researcherName),
+    );
   }
 
   static void sendMessage({
@@ -62,7 +85,6 @@ class ResearchMessagingService {
     createThread(researcherName: researcherName, university: university);
 
     final id = threadId(researcherName);
-
     final now = DateTime.now();
 
     final newMessage = ResearchMessageModel(
@@ -74,7 +96,6 @@ class ResearchMessagingService {
     );
 
     messages[id] ??= [];
-
     messages[id]!.add(newMessage);
 
     final threadIndex = threads.indexWhere((thread) => thread.threadId == id);
@@ -82,7 +103,7 @@ class ResearchMessagingService {
     if (threadIndex != -1) {
       final oldThread = threads[threadIndex];
 
-      threads[threadIndex] = ResearchThreadModel(
+      final updatedThread = ResearchThreadModel(
         threadId: oldThread.threadId,
         researcherName: oldThread.researcherName,
         university: oldThread.university,
@@ -91,8 +112,7 @@ class ResearchMessagingService {
         unreadCount: isMe ? oldThread.unreadCount : oldThread.unreadCount + 1,
       );
 
-      final updatedThread = threads.removeAt(threadIndex);
-
+      threads.removeAt(threadIndex);
       threads.insert(0, updatedThread);
     }
 
@@ -106,7 +126,11 @@ class ResearchMessagingService {
       );
     }
 
-    RealtimeMessagingService.notifyThread(researcherName);
+    RealtimeMessagingService.notifyAll(
+      threads: getThreads(),
+      researcherName: researcherName,
+      messages: getMessages(researcherName),
+    );
   }
 
   static void markThreadAsRead(String researcherName) {
@@ -126,6 +150,8 @@ class ResearchMessagingService {
       updatedAt: oldThread.updatedAt,
       unreadCount: 0,
     );
+
+    syncThreads();
   }
 
   static int totalUnreadCount() {
@@ -136,6 +162,7 @@ class ResearchMessagingService {
     threads.clear();
     messages.clear();
 
-    RealtimeMessagingService.disposeAll();
+    RealtimeMessagingService.notifyThreads([]);
+    RealtimeMessagingService.disposeAllMessagesOnly();
   }
 }

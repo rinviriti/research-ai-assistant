@@ -1,14 +1,21 @@
 import 'dart:async';
 
 import '../models/research_message_model.dart';
-import 'research_messaging_service.dart';
+import '../models/research_thread_model.dart';
 
 class RealtimeMessagingService {
+  static final StreamController<List<ResearchThreadModel>> _threadController =
+      StreamController<List<ResearchThreadModel>>.broadcast();
+
   static final Map<String, StreamController<List<ResearchMessageModel>>>
-  _controllers = {};
+  _messageControllers = {};
 
   static String threadId(String researcherName) {
     return researcherName.trim().toLowerCase().replaceAll(" ", "_");
+  }
+
+  static Stream<List<ResearchThreadModel>> get threadStream {
+    return _threadController.stream;
   }
 
   static Stream<List<ResearchMessageModel>> messageStream(
@@ -16,42 +23,50 @@ class RealtimeMessagingService {
   ) {
     final id = threadId(researcherName);
 
-    _controllers.putIfAbsent(
+    _messageControllers.putIfAbsent(
       id,
       () => StreamController<List<ResearchMessageModel>>.broadcast(),
     );
 
-    Future.microtask(() {
-      _controllers[id]?.add(
-        ResearchMessagingService.getMessages(researcherName),
-      );
-    });
-
-    return _controllers[id]!.stream;
+    return _messageControllers[id]!.stream;
   }
 
-  static void notifyThread(String researcherName) {
+  static void notifyThreads(List<ResearchThreadModel> threads) {
+    if (!_threadController.isClosed) {
+      _threadController.add(List<ResearchThreadModel>.from(threads));
+    }
+  }
+
+  static void notifyMessages({
+    required String researcherName,
+    required List<ResearchMessageModel> messages,
+  }) {
     final id = threadId(researcherName);
 
-    _controllers.putIfAbsent(
+    _messageControllers.putIfAbsent(
       id,
       () => StreamController<List<ResearchMessageModel>>.broadcast(),
     );
 
-    _controllers[id]?.add(ResearchMessagingService.getMessages(researcherName));
+    if (!_messageControllers[id]!.isClosed) {
+      _messageControllers[id]!.add(List<ResearchMessageModel>.from(messages));
+    }
   }
 
-  static void disposeThread(String researcherName) {
-    final id = threadId(researcherName);
-    _controllers[id]?.close();
-    _controllers.remove(id);
+  static void notifyAll({
+    required List<ResearchThreadModel> threads,
+    required String researcherName,
+    required List<ResearchMessageModel> messages,
+  }) {
+    notifyThreads(threads);
+    notifyMessages(researcherName: researcherName, messages: messages);
   }
 
-  static void disposeAll() {
-    for (final controller in _controllers.values) {
+  static void disposeAllMessagesOnly() {
+    for (final controller in _messageControllers.values) {
       controller.close();
     }
 
-    _controllers.clear();
+    _messageControllers.clear();
   }
 }
