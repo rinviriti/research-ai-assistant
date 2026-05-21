@@ -1,5 +1,6 @@
 import '../models/research_message_model.dart';
 import '../models/research_thread_model.dart';
+import 'local_storage_service.dart';
 import 'notification_service.dart';
 import 'realtime_messaging_service.dart';
 
@@ -7,8 +8,68 @@ class ResearchMessagingService {
   static final List<ResearchThreadModel> threads = [];
   static final Map<String, List<ResearchMessageModel>> messages = {};
 
+  static const String threadStorageKey = "rh_threads";
+  static const String messageStorageKey = "rh_messages";
+
   static String threadId(String researcherName) {
     return researcherName.trim().toLowerCase().replaceAll(" ", "_");
+  }
+
+  static Future<void> loadMessages() async {
+    final threadData = await LocalStorageService.getJson(threadStorageKey);
+    final messageData = await LocalStorageService.getJson(messageStorageKey);
+
+    threads.clear();
+    messages.clear();
+
+    if (threadData != null) {
+      threads.addAll(
+        (threadData as List)
+            .map(
+              (item) =>
+                  ResearchThreadModel.fromJson(Map<String, dynamic>.from(item)),
+            )
+            .toList(),
+      );
+    }
+
+    if (messageData != null) {
+      final mapped = Map<String, dynamic>.from(messageData);
+
+      mapped.forEach((key, value) {
+        messages[key] = (value as List)
+            .map(
+              (item) => ResearchMessageModel.fromJson(
+                Map<String, dynamic>.from(item),
+              ),
+            )
+            .toList();
+      });
+    }
+
+    syncThreads();
+
+    for (final thread in threads) {
+      syncMessages(thread.researcherName);
+    }
+  }
+
+  static Future<void> saveMessages() async {
+    await LocalStorageService.saveJson(
+      key: threadStorageKey,
+      data: threads.map((thread) => thread.toJson()).toList(),
+    );
+
+    final encodedMessages = <String, dynamic>{};
+
+    messages.forEach((key, value) {
+      encodedMessages[key] = value.map((message) => message.toJson()).toList();
+    });
+
+    await LocalStorageService.saveJson(
+      key: messageStorageKey,
+      data: encodedMessages,
+    );
   }
 
   static void createThread({
@@ -41,11 +102,13 @@ class ResearchMessagingService {
 
   static List<ResearchThreadModel> getThreads() {
     threads.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
     return List<ResearchThreadModel>.from(threads);
   }
 
   static List<ResearchMessageModel> getMessages(String researcherName) {
     final id = threadId(researcherName);
+
     final threadMessages = messages[id] ?? [];
 
     threadMessages.sort((a, b) => a.createdAt.compareTo(b.createdAt));
@@ -55,6 +118,7 @@ class ResearchMessagingService {
 
   static Stream<List<ResearchThreadModel>> watchThreads() {
     Future.microtask(syncThreads);
+
     return RealtimeMessagingService.threadStream;
   }
 
@@ -62,11 +126,14 @@ class ResearchMessagingService {
     String researcherName,
   ) {
     Future.microtask(() => syncMessages(researcherName));
+
     return RealtimeMessagingService.messageStream(researcherName);
   }
 
   static void syncThreads() {
     RealtimeMessagingService.notifyThreads(getThreads());
+
+    saveMessages();
   }
 
   static void syncMessages(String researcherName) {
@@ -74,6 +141,8 @@ class ResearchMessagingService {
       researcherName: researcherName,
       messages: getMessages(researcherName),
     );
+
+    saveMessages();
   }
 
   static void sendMessage({
@@ -85,6 +154,7 @@ class ResearchMessagingService {
     createThread(researcherName: researcherName, university: university);
 
     final id = threadId(researcherName);
+
     final now = DateTime.now();
 
     final newMessage = ResearchMessageModel(
@@ -96,6 +166,7 @@ class ResearchMessagingService {
     );
 
     messages[id] ??= [];
+
     messages[id]!.add(newMessage);
 
     final threadIndex = threads.indexWhere((thread) => thread.threadId == id);
@@ -113,6 +184,7 @@ class ResearchMessagingService {
       );
 
       threads.removeAt(threadIndex);
+
       threads.insert(0, updatedThread);
     }
 
@@ -132,6 +204,8 @@ class ResearchMessagingService {
       researcherName: researcherName,
       messages: getMessages(researcherName),
     );
+
+    saveMessages();
   }
 
   static void markThreadAsRead(String researcherName) {
@@ -164,6 +238,9 @@ class ResearchMessagingService {
     messages.clear();
 
     RealtimeMessagingService.notifyThreads([]);
+
     RealtimeMessagingService.disposeAllMessagesOnly();
+
+    saveMessages();
   }
 }

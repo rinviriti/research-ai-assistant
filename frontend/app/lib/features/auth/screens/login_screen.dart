@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+
 import '../../../services/auth_service.dart';
-import '../../../widgets/custom_button.dart';
-import '../../../widgets/custom_textfield.dart';
 import '../../navigation/main_navigation_screen.dart';
 import 'signup_screen.dart';
 
@@ -18,16 +17,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String? errorMessage;
   bool isLoading = false;
+  bool obscurePassword = true;
 
   bool isValidEmail(String email) {
     return email.contains("@") && email.contains(".");
-  }
-
-  bool isValidPassword(String password) {
-    final passwordRegex = RegExp(
-      r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_-])[A-Za-z\d@$!%*?&.#_-]{8,}$',
-    );
-    return passwordRegex.hasMatch(password);
   }
 
   Future<void> login() async {
@@ -41,10 +34,9 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    if (!isValidPassword(password)) {
+    if (password.isEmpty) {
       setState(() {
-        errorMessage =
-            "Password must be 8+ characters with uppercase, lowercase, number, and special character.";
+        errorMessage = "Please enter your password.";
       });
       return;
     }
@@ -64,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!isAuthenticated) {
       setState(() {
-        errorMessage = "Invalid email or password. Please sign up first.";
+        errorMessage = "Invalid email or password.";
       });
       return;
     }
@@ -72,6 +64,170 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+    );
+  }
+
+  Widget logoHeader() {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Column(
+      children: [
+        Container(
+          height: 82,
+          width: 82,
+          decoration: BoxDecoration(
+            color: primary.withOpacity(0.14),
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: primary.withOpacity(0.35)),
+          ),
+          child: Icon(Icons.auto_awesome, color: primary, size: 42),
+        ),
+        const SizedBox(height: 22),
+        const Text(
+          "RH+",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 42,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.4,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          "Research Hub Plus",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          "Your AI-powered research workspace.",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white54, fontSize: 14, height: 1.4),
+        ),
+      ],
+    );
+  }
+
+  Widget authCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        children: [
+          const Text(
+            "Welcome back",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 27,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Login to continue your research workflow.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white60),
+          ),
+          const SizedBox(height: 24),
+
+          TextField(
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              labelText: "Email",
+              hintText: "Enter your email",
+              prefixIcon: Icon(Icons.email_outlined),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          TextField(
+            controller: passwordController,
+            obscureText: obscurePassword,
+            style: const TextStyle(color: Colors.white),
+            onSubmitted: (_) => login(),
+            decoration: InputDecoration(
+              labelText: "Password",
+              hintText: "Enter your password",
+              prefixIcon: const Icon(Icons.lock_outline),
+              suffixIcon: IconButton(
+                onPressed: () {
+                  setState(() {
+                    obscurePassword = !obscurePassword;
+                  });
+                },
+                icon: Icon(
+                  obscurePassword
+                      ? Icons.visibility_off_outlined
+                      : Icons.visibility_outlined,
+                ),
+              ),
+            ),
+          ),
+
+          if (errorMessage != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.redAccent, fontSize: 14),
+            ),
+          ],
+
+          const SizedBox(height: 24),
+
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton.icon(
+              onPressed: isLoading ? null : login,
+              icon: isLoading
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.login),
+              label: Text(isLoading ? "Logging in..." : "Login"),
+            ),
+          ),
+
+          const SizedBox(height: 18),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "New to RH+?",
+                style: TextStyle(color: Colors.white60),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SignupScreen(),
+                    ),
+                  );
+                },
+                child: const Text("Create account"),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -85,84 +241,18 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: const BoxConstraints(maxWidth: 430),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.auto_awesome,
-                    color: Colors.blueAccent,
-                    size: 70,
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Research AI Assistant",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    "Organize papers, notes, and experiments smarter.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 16),
-                  ),
-                  const SizedBox(height: 40),
-
-                  CustomTextField(
-                    hintText: "Email",
-                    controller: emailController,
-                  ),
-                  const SizedBox(height: 18),
-
-                  CustomTextField(
-                    hintText: "Password",
-                    obscureText: true,
-                    controller: passwordController,
-                  ),
-                  const SizedBox(height: 16),
-
-                  if (errorMessage != null)
-                    Text(
-                      errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.redAccent,
-                        fontSize: 14,
-                      ),
-                    ),
-
-                  const SizedBox(height: 28),
-
-                  isLoading
-                      ? const CircularProgressIndicator()
-                      : CustomButton(text: "Login", onPressed: login),
-
-                  const SizedBox(height: 20),
-
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SignupScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "Create a new account",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ),
+                  logoHeader(),
+                  const SizedBox(height: 34),
+                  authCard(),
                 ],
               ),
             ),
