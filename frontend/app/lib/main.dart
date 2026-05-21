@@ -6,6 +6,8 @@ import 'services/connection_service.dart';
 import 'services/research_messaging_service.dart';
 import 'services/post_service.dart';
 import 'services/comment_service.dart';
+import 'services/saved_post_service.dart';
+import 'services/share_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +17,8 @@ Future<void> main() async {
   await ResearchMessagingService.loadMessages();
   await PostService.loadPosts();
   await CommentService.loadComments();
+  await SavedPostService.loadSavedPosts();
+  await ShareService.loadShares();
 
   runApp(const ResearchAIAssistantApp());
 }

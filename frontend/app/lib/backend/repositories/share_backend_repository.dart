@@ -5,6 +5,7 @@ import '../mock_backend/mock_database.dart';
 
 class ShareBackendRepository {
   Future<List<ShareModel>> getSharesForPost(String postId) async {
+    await ShareService.loadShares();
     return ShareService.getSharesForPost(postId);
   }
 
@@ -22,38 +23,25 @@ class ShareBackendRepository {
     await MockDatabase.addDocument(
       collection: "shares",
       data: {
-        "shareId": DateTime.now().microsecondsSinceEpoch.toString(),
         "postId": post.postId,
         "originalAuthor": post.author,
         "sharedBy": sharedBy,
         "content": post.content,
         "quote": quote,
-        "timeAgo": "Just now",
+        "createdAt": DateTime.now().toIso8601String(),
       },
     );
   }
 
+  Stream<List<ShareModel>> watchShares() {
+    return ShareService.stream;
+  }
+
   Map<String, dynamic> toBackendPayload(ShareModel share) {
-    return {
-      "shareId": share.shareId,
-      "postId": share.postId,
-      "originalAuthor": share.originalAuthor,
-      "sharedBy": share.sharedBy,
-      "content": share.content,
-      "quote": share.quote,
-      "timeAgo": share.timeAgo,
-    };
+    return share.toJson();
   }
 
   ShareModel fromBackendPayload(Map<String, dynamic> data) {
-    return ShareModel(
-      shareId: data["shareId"] ?? "",
-      postId: data["postId"] ?? "",
-      originalAuthor: data["originalAuthor"] ?? "",
-      sharedBy: data["sharedBy"] ?? "",
-      content: data["content"] ?? "",
-      quote: data["quote"],
-      timeAgo: data["timeAgo"] ?? "",
-    );
+    return ShareModel.fromJson(data);
   }
 }
