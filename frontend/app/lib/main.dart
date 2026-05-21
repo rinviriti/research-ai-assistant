@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 
 import 'features/splash/screens/splash_screen.dart';
+import 'services/notification_service.dart';
+import 'services/connection_service.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await NotificationService.loadNotifications();
+  await ConnectionService.loadConnections();
+
   runApp(const ResearchAIAssistantApp());
 }
 

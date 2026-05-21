@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../models/connection_model.dart';
+import 'local_storage_service.dart';
 import 'notification_service.dart';
 
 class ConnectionService {
@@ -8,6 +9,8 @@ class ConnectionService {
 
   static final StreamController<List<ConnectionModel>> _controller =
       StreamController<List<ConnectionModel>>.broadcast();
+
+  static const String storageKey = "rh_connections";
 
   static Stream<List<ConnectionModel>> get stream {
     Future.microtask(sync);
@@ -18,6 +21,33 @@ class ConnectionService {
     if (!_controller.isClosed) {
       _controller.add(List<ConnectionModel>.from(connections));
     }
+
+    saveConnections();
+  }
+
+  static Future<void> loadConnections() async {
+    final data = await LocalStorageService.getJson(storageKey);
+
+    if (data == null) return;
+
+    connections.clear();
+
+    connections.addAll(
+      (data as List)
+          .map(
+            (item) => ConnectionModel.fromJson(Map<String, dynamic>.from(item)),
+          )
+          .toList(),
+    );
+
+    sync();
+  }
+
+  static Future<void> saveConnections() async {
+    await LocalStorageService.saveJson(
+      key: storageKey,
+      data: connections.map((connection) => connection.toJson()).toList(),
+    );
   }
 
   static List<ConnectionModel> getConnections() {
