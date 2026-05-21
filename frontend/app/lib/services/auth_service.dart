@@ -19,10 +19,12 @@ class AuthService {
     await prefs.setString(nameKey, name.trim());
     await prefs.setString(emailKey, email.trim().toLowerCase());
     await prefs.setString(passwordKey, password);
-    await prefs.setBool(loggedInKey, true);
 
-    currentUser = name.trim();
-    currentUserEmail = email.trim().toLowerCase();
+    // Signup should NOT automatically log in.
+    await prefs.setBool(loggedInKey, false);
+
+    currentUser = null;
+    currentUserEmail = null;
   }
 
   static Future<bool> loginUser(String email, String password) async {
@@ -35,13 +37,14 @@ class AuthService {
     final isValid =
         email.trim().toLowerCase() == storedEmail && password == storedPassword;
 
-    if (isValid) {
-      currentUser = storedName;
-      currentUserEmail = storedEmail;
-      await prefs.setBool(loggedInKey, true);
-    }
+    if (!isValid) return false;
 
-    return isValid;
+    currentUser = storedName;
+    currentUserEmail = storedEmail;
+
+    await prefs.setBool(loggedInKey, true);
+
+    return true;
   }
 
   static Future<bool> isLoggedIn() async {
@@ -53,6 +56,13 @@ class AuthService {
     currentUserEmail = prefs.getString(emailKey);
 
     return loggedIn && currentUser != null && currentUserEmail != null;
+  }
+
+  static Future<bool> hasRegisteredUser() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    return prefs.getString(emailKey) != null &&
+        prefs.getString(passwordKey) != null;
   }
 
   static Future<void> logout() async {

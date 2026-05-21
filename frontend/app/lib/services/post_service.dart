@@ -1,10 +1,59 @@
+import 'dart:async';
+
 import '../models/post_model.dart';
+import 'local_storage_service.dart';
 
 class PostService {
   static final List<PostModel> posts = [];
 
+  static final StreamController<List<PostModel>> _controller =
+      StreamController<List<PostModel>>.broadcast();
+
+  static const String storageKey = "rh_posts";
+
+  static Stream<List<PostModel>> get stream {
+    Future.microtask(sync);
+    return _controller.stream;
+  }
+
+  static void sync() {
+    if (!_controller.isClosed) {
+      _controller.add(List<PostModel>.from(posts));
+    }
+
+    savePosts();
+  }
+
+  static Future<void> loadPosts() async {
+    final data = await LocalStorageService.getJson(storageKey);
+
+    if (data == null) return;
+
+    posts.clear();
+
+    posts.addAll(
+      (data as List)
+          .map((item) => PostModel.fromJson(Map<String, dynamic>.from(item)))
+          .toList(),
+    );
+
+    sync();
+  }
+
+  static Future<void> savePosts() async {
+    await LocalStorageService.saveJson(
+      key: storageKey,
+      data: posts.map((post) => post.toJson()).toList(),
+    );
+  }
+
   static List<PostModel> getPosts() {
-    return posts;
+    posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return List<PostModel>.from(posts);
+  }
+
+  static List<PostModel> getSavedPosts() {
+    return posts.where((post) => post.isBookmarked).toList();
   }
 
   static PostModel? getPostById(String postId) {
@@ -17,10 +66,12 @@ class PostService {
 
   static void addPost(PostModel post) {
     posts.insert(0, post);
+    sync();
   }
 
   static void clearPosts() {
     posts.clear();
+    sync();
   }
 
   static int totalReactions(PostModel post) {
@@ -67,13 +118,15 @@ class PostService {
         updatedReactions.remove(reactionType);
       }
 
-      posts[index] = post.copyWith(
+      final updatedPost = post.copyWith(
         reactions: updatedReactions,
         currentReaction: "",
         likes: totalReactions(post.copyWith(reactions: updatedReactions)),
         isLiked: false,
       );
 
+      posts[index] = updatedPost;
+      sync();
       return;
     }
 
@@ -88,11 +141,38 @@ class PostService {
 
     updatedReactions[reactionType] = (updatedReactions[reactionType] ?? 0) + 1;
 
-    posts[index] = post.copyWith(
+    final updatedPost = post.copyWith(
       reactions: updatedReactions,
       currentReaction: reactionType,
       likes: totalReactions(post.copyWith(reactions: updatedReactions)),
       isLiked: true,
     );
+
+    posts[index] = updatedPost;
+    sync();
+  }
+
+  static void toggleBookmark(String postId) {
+    final index = posts.indexWhere((post) => post.postId == postId);
+
+    if (index == -1) return;
+
+    final post = posts[index];
+
+    posts[index] = post.copyWith(isBookmarked: !post.isBookmarked);
+
+    sync();
+  }
+
+  static void incrementCommentCount(String postId) {
+    final index = posts.indexWhere((post) => post.postId == postId);
+
+    if (index == -1) return;
+
+    final post = posts[index];
+
+    posts[index] = post.copyWith(commentCount: post.commentCount + 1);
+
+    sync();
   }
 }

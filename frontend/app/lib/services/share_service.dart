@@ -40,7 +40,7 @@ class ShareService {
           : "$quote\n\nShared ${post.author}'s research post:\n\n${post.content}",
       type: "Shared Research",
       tags: post.tags,
-      timeAgo: "Just now",
+      createdAt: DateTime.now(),
       likes: 0,
     );
 

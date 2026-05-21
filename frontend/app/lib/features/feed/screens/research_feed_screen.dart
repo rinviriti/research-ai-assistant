@@ -53,6 +53,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
 
   Future<void> loadPosts() async {
     final loadedPosts = await BackendProvider.posts.getPosts();
+    loadedPosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     if (!mounted) return;
 
@@ -98,7 +99,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
       content: content,
       type: selectedPostType,
       tags: parseTags(tagController.text),
-      timeAgo: "Just now",
+      createdAt: DateTime.now(),
       likes: 0,
       isLiked: false,
       media: List<PostMediaModel>.from(selectedMedia),

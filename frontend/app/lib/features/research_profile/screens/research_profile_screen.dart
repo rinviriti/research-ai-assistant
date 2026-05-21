@@ -23,7 +23,7 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
   }
 
   Future<void> loadProfile() async {
-    await ResearchProfileService.loadProfile();
+    await ResearchProfileService.ensureProfile();
 
     if (!mounted) return;
 
@@ -44,63 +44,18 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
   }
 
   ImageProvider? profileImage() {
-    if (profile == null || profile!.profileImagePath.isEmpty) return null;
-
     try {
-      return MemoryImage(base64Decode(profile!.profileImagePath));
-    } catch (_) {
+      if (profile == null) return null;
+
+      final image = profile!.profileImagePath;
+
+      if (image.isEmpty) return null;
+
+      return MemoryImage(base64Decode(image));
+    } catch (e) {
+      debugPrint("Profile image decode error: $e");
       return null;
     }
-  }
-
-  Widget emptyProfile() {
-    final primary = Theme.of(context).colorScheme.primary;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(26),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 58,
-              backgroundColor: primary.withOpacity(0.16),
-              child: Icon(
-                Icons.account_circle_outlined,
-                size: 76,
-                color: primary,
-              ),
-            ),
-            const SizedBox(height: 22),
-            const Text(
-              "Create Your Research Profile",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 27,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Build your academic identity for researcher matching, collaboration, messaging, and RH+ recommendations.",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, height: 1.5),
-            ),
-            const SizedBox(height: 28),
-            SizedBox(
-              width: double.infinity,
-              height: 54,
-              child: ElevatedButton.icon(
-                onPressed: openEditProfile,
-                icon: const Icon(Icons.add),
-                label: const Text("Create Research Profile"),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget statItem(String value, String label) {
@@ -129,9 +84,9 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
   Widget profileHeader() {
     final primary = Theme.of(context).colorScheme.primary;
     final image = profileImage();
+    final completion = profile!.completionPercentage.round();
 
     return Container(
-      width: double.infinity,
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(28),
@@ -148,7 +103,7 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
               gradient: LinearGradient(
                 colors: [
                   primary.withOpacity(0.45),
-                  primary.withOpacity(0.10),
+                  primary.withOpacity(0.12),
                   Theme.of(context).cardColor,
                 ],
               ),
@@ -167,14 +122,28 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
                       : null,
                 ),
                 const SizedBox(height: 14),
-                Text(
-                  profile!.name.isEmpty ? "Unnamed Researcher" : profile!.name,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 27,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        profile!.name.isEmpty
+                            ? "Unnamed Researcher"
+                            : profile!.name,
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 27,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    if (profile!.isVerified) ...[
+                      const SizedBox(width: 8),
+                      Icon(Icons.verified, color: primary, size: 21),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -191,6 +160,22 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
                       : profile!.university,
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white54, fontSize: 13),
+                ),
+                const SizedBox(height: 18),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: LinearProgressIndicator(
+                    value: completion / 100,
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(20),
+                    backgroundColor: Colors.white10,
+                    color: primary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "$completion% profile completed",
+                  style: const TextStyle(color: Colors.white54, fontSize: 12),
                 ),
                 const SizedBox(height: 18),
                 Padding(
@@ -312,18 +297,10 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
     final primary = Theme.of(context).colorScheme.primary;
 
     if (items.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white10),
-        ),
-        child: const Text(
-          "No data added yet.",
-          style: TextStyle(color: Colors.white54),
-        ),
+      return infoCard(
+        title: "Empty",
+        value: "No data added yet.",
+        icon: Icons.info_outline,
       );
     }
 
@@ -346,20 +323,12 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
     );
   }
 
-  Widget linkCard({
-    required String title,
-    required String value,
-    required IconData icon,
-  }) {
-    return infoCard(title: title, value: value, icon: icon);
-  }
-
   @override
   Widget build(BuildContext context) {
     if (profile == null) {
       return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: emptyProfile(),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -371,71 +340,69 @@ class _ResearchProfileScreenState extends State<ResearchProfileScreen> {
           padding: const EdgeInsets.all(20),
           children: [
             profileHeader(),
-
             sectionTitle("About", Icons.info_outline),
-
             infoCard(
               title: "Research Bio",
               value: profile!.bio,
               icon: Icons.description_outlined,
             ),
-
             infoCard(
               title: "Location",
               value: profile!.location,
               icon: Icons.location_on_outlined,
             ),
-
             infoCard(
               title: "Looking For",
               value: profile!.lookingFor,
               icon: Icons.search,
             ),
-
             sectionTitle("Research Interests", Icons.psychology_outlined),
-
             chipList(profile!.researchInterests),
-
             sectionTitle("Skills", Icons.code),
-
             chipList(profile!.skills),
-
             sectionTitle("Academic Work", Icons.article_outlined),
-
             infoCard(
               title: "Publications",
               value: profile!.publications.join(", "),
               icon: Icons.article_outlined,
             ),
-
             infoCard(
               title: "Projects",
               value: profile!.projects.join(", "),
               icon: Icons.work_outline,
             ),
-
             sectionTitle("Academic Links", Icons.link),
-
-            linkCard(
+            infoCard(
               title: "Email",
               value: profile!.email,
               icon: Icons.email_outlined,
             ),
-
-            linkCard(
+            infoCard(
               title: "Google Scholar",
               value: profile!.googleScholar,
               icon: Icons.school_outlined,
             ),
-
-            linkCard(title: "GitHub", value: profile!.github, icon: Icons.code),
-
-            linkCard(
+            infoCard(title: "GitHub", value: profile!.github, icon: Icons.code),
+            infoCard(
               title: "LinkedIn",
               value: profile!.linkedIn,
               icon: Icons.business_center_outlined,
             ),
-
+            infoCard(
+              title: "ORCID",
+              value: profile!.orcid,
+              icon: Icons.badge_outlined,
+            ),
+            infoCard(
+              title: "Website",
+              value: profile!.website,
+              icon: Icons.language,
+            ),
+            infoCard(
+              title: "CV",
+              value: profile!.cvPath.isEmpty ? "" : "CV uploaded",
+              icon: Icons.picture_as_pdf_outlined,
+            ),
             const SizedBox(height: 30),
           ],
         ),

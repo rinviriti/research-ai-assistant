@@ -4,7 +4,13 @@ import '../mock_backend/mock_database.dart';
 
 class PostBackendRepository {
   Future<List<PostModel>> getPosts() async {
+    await PostService.loadPosts();
     return PostService.getPosts();
+  }
+
+  Future<List<PostModel>> getSavedPosts() async {
+    await PostService.loadPosts();
+    return PostService.getSavedPosts();
   }
 
   Future<PostModel?> getPostById(String postId) async {
@@ -24,9 +30,22 @@ class PostBackendRepository {
     PostService.setReaction(postId: postId, reactionType: reactionType);
   }
 
+  Future<void> toggleBookmark(String postId) async {
+    PostService.toggleBookmark(postId);
+  }
+
+  Future<void> incrementCommentCount(String postId) async {
+    PostService.incrementCommentCount(postId);
+  }
+
   Future<void> clearPosts() async {
     PostService.clearPosts();
+
     await MockDatabase.clearCollection("posts");
+  }
+
+  Stream<List<PostModel>> watchPosts() {
+    return PostService.stream;
   }
 
   Map<String, dynamic> toBackendPayload(PostModel post) {

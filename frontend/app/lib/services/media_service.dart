@@ -59,4 +59,20 @@ class MediaService {
       base64Data: base64Encode(file.bytes!),
     );
   }
+
+  static Future<String?> pickPdfBase64() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ["pdf"],
+      withData: true,
+    );
+
+    if (result == null || result.files.isEmpty) return null;
+
+    final file = result.files.first;
+
+    if (file.bytes == null) return null;
+
+    return base64Encode(file.bytes!);
+  }
 }

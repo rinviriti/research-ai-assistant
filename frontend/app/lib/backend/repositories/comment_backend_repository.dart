@@ -4,10 +4,12 @@ import '../mock_backend/mock_database.dart';
 
 class CommentBackendRepository {
   Future<List<CommentModel>> getComments(String postId) async {
+    await CommentService.loadComments();
     return CommentService.getCommentsForPost(postId);
   }
 
   Future<List<CommentModel>> getReplies(String commentId) async {
+    await CommentService.loadComments();
     return CommentService.getRepliesForComment(commentId);
   }
 
@@ -25,12 +27,11 @@ class CommentBackendRepository {
     await MockDatabase.addDocument(
       collection: "comments",
       data: {
-        "commentId": DateTime.now().millisecondsSinceEpoch.toString(),
         "postId": postId,
         "commenter": commenter,
         "comment": comment,
-        "timeAgo": "Just now",
         "parentCommentId": null,
+        "createdAt": DateTime.now().toIso8601String(),
       },
     );
   }
@@ -51,12 +52,11 @@ class CommentBackendRepository {
     await MockDatabase.addDocument(
       collection: "comments",
       data: {
-        "commentId": DateTime.now().microsecondsSinceEpoch.toString(),
         "postId": postId,
         "commenter": commenter,
         "comment": reply,
-        "timeAgo": "Just now",
         "parentCommentId": parentCommentId,
+        "createdAt": DateTime.now().toIso8601String(),
       },
     );
   }
@@ -69,25 +69,15 @@ class CommentBackendRepository {
     return CommentService.replyCount(commentId);
   }
 
+  Stream<List<CommentModel>> watchComments() {
+    return CommentService.stream;
+  }
+
   Map<String, dynamic> toBackendPayload(CommentModel comment) {
-    return {
-      "commentId": comment.commentId,
-      "postId": comment.postId,
-      "commenter": comment.commenter,
-      "comment": comment.comment,
-      "timeAgo": comment.timeAgo,
-      "parentCommentId": comment.parentCommentId,
-    };
+    return comment.toJson();
   }
 
   CommentModel fromBackendPayload(Map<String, dynamic> data) {
-    return CommentModel(
-      commentId: data["commentId"] ?? "",
-      postId: data["postId"] ?? "",
-      commenter: data["commenter"] ?? "",
-      comment: data["comment"] ?? "",
-      timeAgo: data["timeAgo"] ?? "",
-      parentCommentId: data["parentCommentId"],
-    );
+    return CommentModel.fromJson(data);
   }
 }

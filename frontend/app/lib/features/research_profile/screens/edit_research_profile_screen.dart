@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../constants/research_options.dart';
 import '../../../models/research_profile_model.dart';
+import '../../../services/auth_service.dart';
 import '../../../services/media_service.dart';
 import '../../../services/research_profile_service.dart';
 
@@ -30,11 +31,16 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
   final googleScholarController = TextEditingController();
   final githubController = TextEditingController();
   final linkedInController = TextEditingController();
+  final orcidController = TextEditingController();
+  final websiteController = TextEditingController();
 
   List<String> selectedInterests = [];
   List<String> selectedSkills = [];
 
   String profileImagePath = "";
+  String cvPath = "";
+
+  ResearchProfileModel? existingProfile;
 
   @override
   void initState() {
@@ -46,9 +52,13 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     await ResearchProfileService.loadProfile();
 
     final profile = ResearchProfileService.currentProfile;
+    existingProfile = profile;
 
     if (profile == null) {
-      setState(() {});
+      nameController.text = AuthService.currentUser ?? "";
+      emailController.text = AuthService.currentUserEmail ?? "";
+
+      if (mounted) setState(() {});
       return;
     }
 
@@ -69,7 +79,11 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     googleScholarController.text = profile.googleScholar;
     githubController.text = profile.github;
     linkedInController.text = profile.linkedIn;
+    orcidController.text = profile.orcid;
+    websiteController.text = profile.website;
+
     profileImagePath = profile.profileImagePath;
+    cvPath = profile.cvPath;
 
     if (mounted) setState(() {});
   }
@@ -84,6 +98,22 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     });
   }
 
+  Future<void> pickCvPdf() async {
+    final pdfBase64 = await MediaService.pickPdfBase64();
+
+    if (pdfBase64 == null) return;
+
+    setState(() {
+      cvPath = pdfBase64;
+    });
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("CV PDF uploaded successfully.")),
+    );
+  }
+
   List<String> splitList(String text) {
     return text
         .split(",")
@@ -94,21 +124,17 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
 
   void toggleInterest(String interest) {
     setState(() {
-      if (selectedInterests.contains(interest)) {
-        selectedInterests.remove(interest);
-      } else {
-        selectedInterests.add(interest);
-      }
+      selectedInterests.contains(interest)
+          ? selectedInterests.remove(interest)
+          : selectedInterests.add(interest);
     });
   }
 
   void toggleSkill(String skill) {
     setState(() {
-      if (selectedSkills.contains(skill)) {
-        selectedSkills.remove(skill);
-      } else {
-        selectedSkills.add(skill);
-      }
+      selectedSkills.contains(skill)
+          ? selectedSkills.remove(skill)
+          : selectedSkills.add(skill);
     });
   }
 
@@ -139,7 +165,13 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
       return;
     }
 
+    final now = DateTime.now();
+
     final updatedProfile = ResearchProfileModel(
+      userId:
+          existingProfile?.userId ??
+          AuthService.currentUserEmail ??
+          "local_user",
       name: name,
       email: email,
       university: universityController.text.trim(),
@@ -154,7 +186,13 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
       googleScholar: googleScholarController.text.trim(),
       github: githubController.text.trim(),
       linkedIn: linkedInController.text.trim(),
+      orcid: orcidController.text.trim(),
+      website: websiteController.text.trim(),
       profileImagePath: profileImagePath,
+      cvPath: cvPath,
+      isVerified: existingProfile?.isVerified ?? false,
+      createdAt: existingProfile?.createdAt ?? now,
+      updatedAt: now,
     );
 
     await ResearchProfileService.saveProfile(updatedProfile);
@@ -168,49 +206,113 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     Navigator.pop(context, true);
   }
 
+  Widget headerCard() {
+    final primary = Theme.of(context).colorScheme.primary;
+    final hasExistingProfile = ResearchProfileService.currentProfile != null;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white10),
+        gradient: LinearGradient(
+          colors: [primary.withOpacity(0.20), Theme.of(context).cardColor],
+        ),
+      ),
+      child: Column(
+        children: [
+          profileImageSection(),
+          const SizedBox(height: 18),
+          Text(
+            hasExistingProfile
+                ? "Update Your Academic Identity"
+                : "Create Your Academic Identity",
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Your RH+ profile powers collaborator matching, academic networking, and future AI recommendations.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white70, height: 1.45),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget profileImageSection() {
     final primary = Theme.of(context).colorScheme.primary;
+
+    ImageProvider? image;
+
+    try {
+      if (profileImagePath.isNotEmpty) {
+        image = MemoryImage(base64Decode(profileImagePath));
+      }
+    } catch (_) {
+      image = null;
+    }
 
     return Column(
       children: [
         CircleAvatar(
-          radius: 48,
+          radius: 50,
           backgroundColor: primary,
-          backgroundImage: profileImagePath.isNotEmpty
-              ? MemoryImage(base64Decode(profileImagePath))
-              : null,
-          child: profileImagePath.isEmpty
-              ? const Icon(Icons.account_circle, color: Colors.black, size: 58)
+          backgroundImage: image,
+          child: image == null
+              ? const Icon(Icons.account_circle, color: Colors.black, size: 60)
               : null,
         ),
         const SizedBox(height: 12),
         TextButton.icon(
           onPressed: pickProfileImage,
           icon: const Icon(Icons.photo_camera_outlined),
-          label: const Text("Upload Profile Photo"),
+          label: Text(
+            profileImagePath.isEmpty
+                ? "Upload Profile Photo"
+                : "Replace Profile Photo",
+          ),
         ),
       ],
     );
   }
 
-  Widget sectionTitle(String title, String subtitle) {
+  Widget sectionTitle(String title, String subtitle, IconData icon) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Padding(
-      padding: const EdgeInsets.only(top: 28, bottom: 14),
-      child: Column(
+      padding: const EdgeInsets.only(top: 30, bottom: 14),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 21,
-              fontWeight: FontWeight.bold,
+          Icon(icon, color: primary, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 21,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  subtitle,
+                  style: const TextStyle(color: Colors.white60, height: 1.4),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: const TextStyle(color: Colors.white60, height: 1.4),
           ),
         ],
       ),
@@ -226,8 +328,8 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
   }) {
     final primary = Theme.of(context).colorScheme.primary;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
       child: TextField(
         controller: controller,
         maxLines: maxLines,
@@ -245,22 +347,21 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     final primary = Theme.of(context).colorScheme.primary;
 
     return Container(
+      margin: const EdgeInsets.only(top: 4, bottom: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        // ignore: deprecated_member_use
         color: primary.withOpacity(0.10),
         borderRadius: BorderRadius.circular(18),
-        // ignore: deprecated_member_use
         border: Border.all(color: primary.withOpacity(0.30)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline, color: primary),
+          Icon(Icons.auto_awesome, color: primary),
           const SizedBox(width: 12),
           const Expanded(
             child: Text(
-              "Select research interests and skills from the options below. These selections will be used for collaborator matching, supervisor discovery, and research recommendation scoring.",
+              "These selections improve collaborator matching, supervisor discovery, and research recommendation scoring.",
               style: TextStyle(color: Colors.white70, height: 1.45),
             ),
           ),
@@ -337,10 +438,8 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
                   vertical: 7,
                 ),
                 decoration: BoxDecoration(
-                  // ignore: deprecated_member_use
                   color: primary.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(30),
-                  // ignore: deprecated_member_use
                   border: Border.all(color: primary.withOpacity(0.35)),
                 ),
                 child: Text(
@@ -374,6 +473,67 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     );
   }
 
+  Widget cvUploadCard() {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: cvPath.isEmpty ? Colors.white10 : primary.withOpacity(0.35),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            height: 48,
+            width: 48,
+            decoration: BoxDecoration(
+              color: Colors.redAccent.withOpacity(0.14),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.picture_as_pdf_outlined,
+              color: Colors.redAccent,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Academic CV",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  cvPath.isEmpty
+                      ? "Upload your CV as a PDF file"
+                      : "CV PDF uploaded successfully",
+                  style: const TextStyle(color: Colors.white60, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          TextButton.icon(
+            onPressed: pickCvPdf,
+            icon: const Icon(Icons.upload_file),
+            label: Text(cvPath.isEmpty ? "Upload" : "Replace"),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void dispose() {
     nameController.dispose();
@@ -388,6 +548,8 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
     googleScholarController.dispose();
     githubController.dispose();
     linkedInController.dispose();
+    orcidController.dispose();
+    websiteController.dispose();
     super.dispose();
   }
 
@@ -408,42 +570,12 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: Colors.white10),
-              ),
-              child: Column(
-                children: [
-                  profileImageSection(),
-                  const SizedBox(height: 16),
-                  Text(
-                    hasExistingProfile
-                        ? "Update Your Academic Identity"
-                        : "Create Your Academic Identity",
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 23,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "Your profile will power researcher matching, academic networking, and future AI recommendation features.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, height: 1.45),
-                  ),
-                ],
-              ),
-            ),
+            headerCard(),
 
             sectionTitle(
               "Basic Information",
-              "Add your academic identity and affiliation.",
+              "Add your academic identity, affiliation, and research background.",
+              Icons.person_outline,
             ),
 
             inputField(
@@ -451,31 +583,26 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
               controller: nameController,
               icon: Icons.person_outline,
             ),
-
             inputField(
               label: "Email",
               controller: emailController,
               icon: Icons.email_outlined,
             ),
-
             inputField(
               label: "University",
               controller: universityController,
               icon: Icons.school_outlined,
             ),
-
             inputField(
               label: "Department",
               controller: departmentController,
               icon: Icons.apartment_outlined,
             ),
-
             inputField(
               label: "Location",
               controller: locationController,
               icon: Icons.location_on_outlined,
             ),
-
             inputField(
               label: "Bio",
               controller: bioController,
@@ -483,7 +610,6 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
               hint: "Briefly describe your research background...",
               icon: Icons.description_outlined,
             ),
-
             inputField(
               label: "Looking For",
               controller: lookingForController,
@@ -497,6 +623,7 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
             sectionTitle(
               "Research Matching Data",
               "Choose options instead of typing everything manually.",
+              Icons.psychology_outlined,
             ),
 
             optionSelector(
@@ -520,7 +647,8 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
 
             sectionTitle(
               "Academic Work",
-              "Use commas to separate publications and projects.",
+              "Add publications, projects, and a PDF version of your academic CV.",
+              Icons.article_outlined,
             ),
 
             inputField(
@@ -539,9 +667,12 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
               icon: Icons.work_outline,
             ),
 
+            cvUploadCard(),
+
             sectionTitle(
               "Academic Links",
               "Add links that help others evaluate your research background.",
+              Icons.link,
             ),
 
             inputField(
@@ -549,17 +680,25 @@ class _EditResearchProfileScreenState extends State<EditResearchProfileScreen> {
               controller: googleScholarController,
               icon: Icons.school,
             ),
-
             inputField(
               label: "GitHub",
               controller: githubController,
-              icon: Icons.link,
+              icon: Icons.code,
             ),
-
             inputField(
               label: "LinkedIn",
               controller: linkedInController,
               icon: Icons.business_center_outlined,
+            ),
+            inputField(
+              label: "ORCID",
+              controller: orcidController,
+              icon: Icons.badge_outlined,
+            ),
+            inputField(
+              label: "Website",
+              controller: websiteController,
+              icon: Icons.language,
             ),
 
             const SizedBox(height: 14),
