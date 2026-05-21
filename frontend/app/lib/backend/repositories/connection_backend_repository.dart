@@ -4,16 +4,22 @@ import '../mock_backend/mock_database.dart';
 
 class ConnectionBackendRepository {
   Future<List<ConnectionModel>> getConnections() async {
-    return ConnectionService.connections;
+    return ConnectionService.getConnections();
+  }
+
+  Stream<List<ConnectionModel>> watchConnections() {
+    return ConnectionService.stream;
   }
 
   Future<void> sendRequest({
     required String researcherName,
     required String university,
+    List<String> interests = const [],
   }) async {
     ConnectionService.sendRequest(
       researcherName: researcherName,
       university: university,
+      interests: interests,
     );
 
     await MockDatabase.addDocument(
@@ -22,6 +28,7 @@ class ConnectionBackendRepository {
         "researcherName": researcherName,
         "university": university,
         "status": "pending",
+        "interests": interests,
       },
     );
   }
@@ -54,7 +61,7 @@ class ConnectionBackendRepository {
     return ConnectionModel(
       researcherName: data["researcherName"] ?? "",
       university: data["university"] ?? "",
-      status: data["status"] ?? "",
+      status: data["status"] ?? "pending",
     );
   }
 }

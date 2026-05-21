@@ -2,115 +2,250 @@ import 'package:flutter/material.dart';
 
 import '../../../models/connection_model.dart';
 import '../../../services/connection_service.dart';
+import '../../../services/research_messaging_service.dart';
+import '../../messaging/screens/research_chat_detail_screen.dart';
+import '../../researchers/screens/researcher_profile_preview_screen.dart';
 
-class ConnectionsScreen extends StatefulWidget {
+class ConnectionsScreen extends StatelessWidget {
   const ConnectionsScreen({super.key});
 
-  @override
-  State<ConnectionsScreen> createState() => _ConnectionsScreenState();
-}
+  void openChat(BuildContext context, ConnectionModel connection) {
+    ResearchMessagingService.createThread(
+      researcherName: connection.researcherName,
+      university: connection.university,
+    );
 
-class _ConnectionsScreenState extends State<ConnectionsScreen> {
-  Widget connectionCard(ConnectionModel connection) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final isPending = connection.status == "pending";
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Colors.white10),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResearchChatDetailScreen(
+          researcherName: connection.researcherName,
+          university: connection.university,
+        ),
       ),
-      child: Row(
+    );
+  }
+
+  void openProfile(BuildContext context, ConnectionModel connection) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResearcherProfilePreviewScreen(
+          name: connection.researcherName,
+          university: connection.university,
+          interests: const ["Research", "Collaboration"],
+        ),
+      ),
+    );
+  }
+
+  Widget statItem({
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Column(
         children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: isPending ? Colors.orangeAccent : primary,
-            child: Text(
-              connection.researcherName.substring(0, 1),
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-              ),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
             ),
           ),
-
-          const SizedBox(width: 14),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  connection.researcherName,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 5),
-
-                Text(
-                  connection.university,
-                  style: const TextStyle(color: Colors.white60, fontSize: 13),
-                ),
-
-                const SizedBox(height: 10),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 11,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isPending
-                        ? Colors.orangeAccent.withOpacity(0.14)
-                        : Colors.greenAccent.withOpacity(0.14),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: isPending
-                          ? Colors.orangeAccent.withOpacity(0.45)
-                          : Colors.greenAccent.withOpacity(0.45),
-                    ),
-                  ),
-                  child: Text(
-                    isPending ? "Pending Request" : "Connected",
-                    style: TextStyle(
-                      color: isPending
-                          ? Colors.orangeAccent
-                          : Colors.greenAccent,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          IconButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    "Chat with ${connection.researcherName} coming soon.",
-                  ),
-                ),
-              );
-            },
-            icon: Icon(Icons.chat_bubble_outline, color: primary),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: Colors.white60),
           ),
         ],
       ),
     );
   }
 
-  Widget emptyState() {
+  Widget statsHeader(BuildContext context, List<ConnectionModel> connections) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    final pendingCount = connections
+        .where((connection) => connection.status == "pending")
+        .length;
+
+    final acceptedCount = connections
+        .where((connection) => connection.status == "accepted")
+        .length;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 22),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white10),
+        gradient: LinearGradient(
+          colors: [primary.withOpacity(0.18), Theme.of(context).cardColor],
+        ),
+      ),
+      child: Row(
+        children: [
+          statItem(
+            value: connections.length.toString(),
+            label: "Total",
+            color: primary,
+          ),
+          Container(width: 1, height: 45, color: Colors.white12),
+          statItem(
+            value: pendingCount.toString(),
+            label: "Pending",
+            color: Colors.orangeAccent,
+          ),
+          Container(width: 1, height: 45, color: Colors.white12),
+          statItem(
+            value: acceptedCount.toString(),
+            label: "Connected",
+            color: Colors.greenAccent,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget connectionCard(BuildContext context, ConnectionModel connection) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final isPending = connection.status == "pending";
+    final isAccepted = connection.status == "accepted";
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(22),
+      onTap: () => openProfile(context, connection),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: isAccepted
+                ? Colors.greenAccent.withOpacity(0.35)
+                : Colors.white10,
+          ),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: isPending ? Colors.orangeAccent : primary,
+              child: Text(
+                connection.researcherName.substring(0, 1),
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 23,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 14),
+
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    connection.researcherName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  Text(
+                    connection.university,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: Colors.white60, fontSize: 13),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 11,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isPending
+                          ? Colors.orangeAccent.withOpacity(0.14)
+                          : Colors.greenAccent.withOpacity(0.14),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(
+                        color: isPending
+                            ? Colors.orangeAccent.withOpacity(0.45)
+                            : Colors.greenAccent.withOpacity(0.45),
+                      ),
+                    ),
+                    child: Text(
+                      isPending ? "Pending Request" : "Connected",
+                      style: TextStyle(
+                        color: isPending
+                            ? Colors.orangeAccent
+                            : Colors.greenAccent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Column(
+              children: [
+                if (isPending)
+                  IconButton(
+                    tooltip: "Accept",
+                    onPressed: () {
+                      ConnectionService.acceptConnection(
+                        connection.researcherName,
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.check_circle_outline,
+                      color: Colors.greenAccent,
+                    ),
+                  ),
+
+                IconButton(
+                  tooltip: "Message",
+                  onPressed: () => openChat(context, connection),
+                  icon: Icon(Icons.chat_bubble_outline, color: primary),
+                ),
+
+                IconButton(
+                  tooltip: "Remove",
+                  onPressed: () {
+                    ConnectionService.removeConnection(
+                      connection.researcherName,
+                    );
+                  },
+                  icon: const Icon(Icons.close, color: Colors.white38),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget emptyState(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
 
     return Center(
@@ -136,7 +271,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
             const SizedBox(height: 10),
 
             const Text(
-              "Connect with researchers from the Research Feed or Find Researchers page. Your pending requests and accepted collaborators will appear here.",
+              "Connect with researchers from the Research Feed, Search page, or Swipe Match. Your pending requests and accepted collaborators will appear here.",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white70, height: 1.5),
             ),
@@ -146,123 +281,53 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     );
   }
 
-  Widget statsHeader() {
-    final connections = ConnectionService.connections;
-    final pendingCount = connections
-        .where((connection) => connection.status == "pending")
-        .length;
-    final acceptedCount = connections
-        .where((connection) => connection.status == "accepted")
-        .length;
+  Widget content(BuildContext context, List<ConnectionModel> connections) {
+    if (connections.isEmpty) {
+      return emptyState(context);
+    }
 
-    final primary = Theme.of(context).colorScheme.primary;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 22),
+    return ListView(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white10),
-        gradient: LinearGradient(
-          colors: [primary.withOpacity(0.18), Theme.of(context).cardColor],
+      children: [
+        const Text(
+          "Your Research Network",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  connections.length.toString(),
-                  style: TextStyle(
-                    color: primary,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text("Total", style: TextStyle(color: Colors.white60)),
-              ],
-            ),
-          ),
-          Container(width: 1, height: 45, color: Colors.white12),
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  pendingCount.toString(),
-                  style: const TextStyle(
-                    color: Colors.orangeAccent,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text("Pending", style: TextStyle(color: Colors.white60)),
-              ],
-            ),
-          ),
-          Container(width: 1, height: 45, color: Colors.white12),
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  acceptedCount.toString(),
-                  style: const TextStyle(
-                    color: Colors.greenAccent,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  "Connected",
-                  style: TextStyle(color: Colors.white60),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+
+        const SizedBox(height: 10),
+
+        const Text(
+          "Manage collaboration requests, research connections, and academic networking contacts.",
+          style: TextStyle(color: Colors.white70, height: 1.5),
+        ),
+
+        const SizedBox(height: 24),
+
+        statsHeader(context, connections),
+
+        ...connections.map((connection) => connectionCard(context, connection)),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final connections = ConnectionService.connections;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(title: const Text("Research Connections")),
-      body: connections.isEmpty
-          ? emptyState()
-          : ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                const Text(
-                  "Your Research Network",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+      body: StreamBuilder<List<ConnectionModel>>(
+        stream: ConnectionService.stream,
+        initialData: ConnectionService.getConnections(),
+        builder: (context, snapshot) {
+          final connections = snapshot.data ?? [];
 
-                const SizedBox(height: 10),
-
-                const Text(
-                  "Manage collaboration requests, research connections, and future academic networking contacts.",
-                  style: TextStyle(color: Colors.white70, height: 1.5),
-                ),
-
-                const SizedBox(height: 24),
-
-                statsHeader(),
-
-                ...connections.map(connectionCard),
-              ],
-            ),
+          return content(context, connections);
+        },
+      ),
     );
   }
 }
