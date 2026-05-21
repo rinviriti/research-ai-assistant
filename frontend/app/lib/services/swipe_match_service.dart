@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../models/researcher_model.dart';
 import '../models/swipe_match_model.dart';
 import 'notification_service.dart';
@@ -6,6 +8,24 @@ import 'researcher_service.dart';
 class SwipeMatchService {
   static final List<SwipeMatchModel> matches = [];
   static final List<String> skippedResearchers = [];
+
+  static final StreamController<List<SwipeMatchModel>> _matchController =
+      StreamController<List<SwipeMatchModel>>.broadcast();
+
+  static Stream<List<SwipeMatchModel>> get matchStream {
+    Future.microtask(syncMatches);
+    return _matchController.stream;
+  }
+
+  static void syncMatches() {
+    if (!_matchController.isClosed) {
+      _matchController.add(List<SwipeMatchModel>.from(matches));
+    }
+  }
+
+  static List<SwipeMatchModel> getMatches() {
+    return List<SwipeMatchModel>.from(matches);
+  }
 
   static final List<String> myInterests = [
     "Medical Imaging",
@@ -42,7 +62,8 @@ class SwipeMatchService {
 
     if (alreadyMatched) return;
 
-    matches.add(
+    matches.insert(
+      0,
       SwipeMatchModel(
         researcherName: researcher.name,
         university: researcher.university,
@@ -56,13 +77,23 @@ class SwipeMatchService {
       body:
           "You showed interest in ${researcher.name} from ${researcher.university}.",
       type: "match",
+      targetName: researcher.name,
+      payload: {
+        "researcherName": researcher.name,
+        "university": researcher.university,
+        "interests": researcher.interests,
+      },
     );
+
+    syncMatches();
   }
 
   static void skipResearcher(ResearcherModel researcher) {
     if (!skippedResearchers.contains(researcher.name)) {
       skippedResearchers.add(researcher.name);
     }
+
+    syncMatches();
   }
 
   static void resetSwipes() {
@@ -73,6 +104,13 @@ class SwipeMatchService {
       title: "Swipe Matching Reset",
       body: "Your research swipe matching activity has been reset.",
       type: "match",
+      payload: {
+        "researcherName": "Researcher",
+        "university": "Research Network",
+        "interests": <String>[],
+      },
     );
+
+    syncMatches();
   }
 }
