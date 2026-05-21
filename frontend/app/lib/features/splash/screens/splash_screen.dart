@@ -32,37 +32,67 @@ class _SplashScreenState extends State<SplashScreen> {
     await ChatService.loadChat();
 
     final prefs = await SharedPreferences.getInstance();
-    final hasSeenOnboarding = prefs.getBool("has_seen_onboarding") ?? false;
+
+    final hasSeenOnboarding = prefs.getBool("rh_has_seen_onboarding") ?? false;
+
     final loggedIn = await AuthService.isLoggedIn();
 
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(milliseconds: 700));
 
     if (!mounted) return;
 
     if (!hasSeenOnboarding) {
-      await prefs.setBool("has_seen_onboarding", true);
+      await prefs.setBool("rh_has_seen_onboarding", true);
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+      );
+
+      return;
+    }
+
+    if (loggedIn) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
       );
       return;
     }
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) =>
-            loggedIn ? const MainNavigationScreen() : const LoginScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFF0F172A),
-      body: Center(child: CircularProgressIndicator()),
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.auto_awesome,
+              color: Theme.of(context).colorScheme.primary,
+              size: 58,
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              "RH+",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 38,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 18),
+            const CircularProgressIndicator(),
+          ],
+        ),
+      ),
     );
   }
 }
