@@ -3,6 +3,7 @@ import 'dart:async';
 import '../models/researcher_model.dart';
 import '../models/swipe_match_model.dart';
 import 'notification_service.dart';
+import 'research_profile_service.dart';
 import 'researcher_service.dart';
 
 class SwipeMatchService {
@@ -27,13 +28,6 @@ class SwipeMatchService {
     return List<SwipeMatchModel>.from(matches);
   }
 
-  static final List<String> myInterests = [
-    "Medical Imaging",
-    "Deep Learning",
-    "Brain Tumor Segmentation",
-    "Flutter",
-  ];
-
   static List<ResearcherModel> getAvailableResearchers() {
     return ResearcherService.researchers.where((researcher) {
       final alreadyMatched = matches.any(
@@ -47,10 +41,46 @@ class SwipeMatchService {
   }
 
   static int calculateMatchScore(ResearcherModel researcher) {
+    final profile = ResearchProfileService.currentProfile;
+
+    if (profile == null) return 0;
+
     return ResearcherService.calculateMatchScore(
-      myInterests,
+      profile.researchInterests,
       researcher.interests,
+      mySkills: profile.skills,
+      otherSkills: researcher.skills,
     );
+  }
+
+  static void refreshScores() {
+    final updatedMatches = matches.map((match) {
+      final researcher = ResearcherService.researchers.firstWhere(
+        (item) => item.name == match.researcherName,
+        orElse: () => ResearcherModel(
+          name: match.researcherName,
+          university: match.university,
+          department: "",
+          bio: "",
+          interests: [],
+          skills: [],
+          lookingFor: "",
+        ),
+      );
+
+      return SwipeMatchModel(
+        researcherName: match.researcherName,
+        university: match.university,
+        matchScore: calculateMatchScore(researcher),
+        status: match.status,
+      );
+    }).toList();
+
+    matches
+      ..clear()
+      ..addAll(updatedMatches);
+
+    syncMatches();
   }
 
   static void likeResearcher(ResearcherModel researcher) {

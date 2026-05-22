@@ -1,3 +1,5 @@
+import '../models/collaborator_recommendation_model.dart';
+import '../models/research_profile_model.dart';
 import '../models/researcher_model.dart';
 
 class ResearcherService {
@@ -49,18 +51,130 @@ class ResearcherService {
     ),
   ];
 
+  static Set<String> normalizeList(List<String> items) {
+    return items
+        .map((item) => item.trim().toLowerCase())
+        .where((item) => item.isNotEmpty)
+        .toSet();
+  }
+
+  static List<String> sharedItems(List<String> mine, List<String> other) {
+    final mySet = normalizeList(mine);
+    final otherSet = normalizeList(other);
+
+    final shared = mySet.intersection(otherSet);
+
+    return mine
+        .where((item) => shared.contains(item.trim().toLowerCase()))
+        .toList();
+  }
+
   static int calculateMatchScore(
     List<String> myInterests,
-    List<String> otherInterests,
+    List<String> otherInterests, {
+    List<String> mySkills = const [],
+    List<String> otherSkills = const [],
+  }) {
+    final myInterestSet = normalizeList(myInterests);
+    final otherInterestSet = normalizeList(otherInterests);
+
+    final mySkillSet = normalizeList(mySkills);
+    final otherSkillSet = normalizeList(otherSkills);
+
+    final sharedInterests = myInterestSet.intersection(otherInterestSet).length;
+    final totalInterests = myInterestSet.union(otherInterestSet).length;
+
+    final sharedSkills = mySkillSet.intersection(otherSkillSet).length;
+    final totalSkills = mySkillSet.union(otherSkillSet).length;
+
+    if (totalInterests == 0 && totalSkills == 0) return 0;
+
+    if (mySkills.isEmpty || otherSkills.isEmpty) {
+      if (totalInterests == 0) return 0;
+      return ((sharedInterests / totalInterests) * 100).round();
+    }
+
+    final interestScore = totalInterests == 0
+        ? 0
+        : ((sharedInterests / totalInterests) * 70).round();
+
+    final skillScore = totalSkills == 0
+        ? 0
+        : ((sharedSkills / totalSkills) * 30).round();
+
+    return interestScore + skillScore;
+  }
+
+  static String buildReason({
+    required ResearcherModel researcher,
+    required List<String> sharedInterests,
+    required List<String> sharedSkills,
+  }) {
+    if (sharedInterests.isNotEmpty && sharedSkills.isNotEmpty) {
+      return "Strong overlap in ${sharedInterests.take(2).join(", ")} with shared skills in ${sharedSkills.take(2).join(", ")}.";
+    }
+
+    if (sharedInterests.isNotEmpty) {
+      return "Research interests overlap in ${sharedInterests.take(3).join(", ")}.";
+    }
+
+    if (sharedSkills.isNotEmpty) {
+      return "Technical skill overlap in ${sharedSkills.take(3).join(", ")}.";
+    }
+
+    return "${researcher.name} may still be useful for broad academic networking.";
+  }
+
+  static String recommendedAction(int score) {
+    if (score >= 70) {
+      return "High-priority collaborator. Send a connection request.";
+    }
+
+    if (score >= 45) {
+      return "Good potential match. Review profile and message if relevant.";
+    }
+
+    if (score >= 20) {
+      return "Moderate match. Save for later exploration.";
+    }
+
+    return "Low overlap. Consider only for general networking.";
+  }
+
+  static List<CollaboratorRecommendationModel> recommendCollaborators(
+    ResearchProfileModel profile,
   ) {
-    final mySet = myInterests.map((e) => e.toLowerCase()).toSet();
-    final otherSet = otherInterests.map((e) => e.toLowerCase()).toSet();
+    final recommendations = researchers.map((researcher) {
+      final sharedInterests = sharedItems(
+        profile.researchInterests,
+        researcher.interests,
+      );
 
-    final shared = mySet.intersection(otherSet).length;
-    final total = mySet.union(otherSet).length;
+      final sharedSkills = sharedItems(profile.skills, researcher.skills);
 
-    if (total == 0) return 0;
+      final score = calculateMatchScore(
+        profile.researchInterests,
+        researcher.interests,
+        mySkills: profile.skills,
+        otherSkills: researcher.skills,
+      );
 
-    return ((shared / total) * 100).round();
+      return CollaboratorRecommendationModel(
+        researcher: researcher,
+        score: score,
+        sharedInterests: sharedInterests,
+        sharedSkills: sharedSkills,
+        reason: buildReason(
+          researcher: researcher,
+          sharedInterests: sharedInterests,
+          sharedSkills: sharedSkills,
+        ),
+        recommendedAction: recommendedAction(score),
+      );
+    }).toList();
+
+    recommendations.sort((a, b) => b.score.compareTo(a.score));
+
+    return recommendations;
   }
 }
