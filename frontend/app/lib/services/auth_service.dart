@@ -1,4 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/session_user_model.dart';
+import 'session_service.dart';
 
 class AuthService {
   static String? currentUser;
@@ -41,6 +43,13 @@ class AuthService {
 
     currentUser = storedName;
     currentUserEmail = storedEmail;
+    await SessionService.saveSession(
+      SessionUserModel(
+        userId: storedEmail ?? "",
+        name: storedName ?? "",
+        email: storedEmail ?? "",
+      ),
+    );
 
     await prefs.setBool(loggedInKey, true);
 
@@ -69,7 +78,7 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
 
     await prefs.setBool(loggedInKey, false);
-
+    await SessionService.clearSession();
     currentUser = null;
     currentUserEmail = null;
   }
@@ -81,7 +90,7 @@ class AuthService {
     await prefs.remove(emailKey);
     await prefs.remove(passwordKey);
     await prefs.remove(loggedInKey);
-
+    await SessionService.clearSession();
     currentUser = null;
     currentUserEmail = null;
   }
