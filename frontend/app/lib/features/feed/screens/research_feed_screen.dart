@@ -6,7 +6,7 @@ import '../../../models/post_model.dart';
 import '../../../services/post_service.dart';
 import '../../researchers/screens/researcher_profile_preview_screen.dart';
 import 'dart:convert';
-
+import '../../../services/session_service.dart';
 import '../../../models/post_media_model.dart';
 import '../../../services/media_service.dart';
 
@@ -94,6 +94,7 @@ class _ResearchFeedScreenState extends State<ResearchFeedScreen> {
 
     final post = PostModel(
       postId: DateTime.now().millisecondsSinceEpoch.toString(),
+      authorId: SessionService.currentUser?.userId ?? "local_user",
       author: "You",
       university: "Your University",
       content: content,

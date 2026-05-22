@@ -5,6 +5,7 @@ import '../models/share_model.dart';
 import 'local_storage_service.dart';
 import 'notification_service.dart';
 import 'post_service.dart';
+import 'session_service.dart';
 
 class ShareService {
   static final List<ShareModel> shares = [];
@@ -85,6 +86,7 @@ class ShareService {
 
     final repost = PostModel(
       postId: "share_${share.shareId}",
+      authorId: SessionService.currentUser?.userId ?? "local_user",
       author: sharedBy,
       university: "Your University",
       content: quote == null || quote.trim().isEmpty
