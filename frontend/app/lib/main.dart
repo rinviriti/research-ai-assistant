@@ -34,82 +34,79 @@ class ResearchAIAssistantApp extends StatelessWidget {
 
       theme: ThemeData(
         brightness: Brightness.dark,
+        useMaterial3: true,
 
-        scaffoldBackgroundColor: const Color(0xFF020617),
-
-        primaryColor: const Color(0xFF38BDF8),
+        scaffoldBackgroundColor: const Color(0xFF070B14),
+        primaryColor: const Color(0xFF60A5FA),
 
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF38BDF8),
-          secondary: Color(0xFF818CF8),
-          surface: Color(0xFF0F172A),
+          primary: Color(0xFF60A5FA),
+          secondary: Color(0xFFA78BFA),
+          surface: Color(0xFF111827),
+          error: Color(0xFFF87171),
         ),
 
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF0F172A),
+          backgroundColor: Color(0xFF111827),
           elevation: 0,
           centerTitle: true,
           titleTextStyle: TextStyle(
-            color: Colors.white,
+            color: Color(0xFFF8FAFC),
             fontSize: 22,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
           ),
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: Color(0xFFF8FAFC)),
         ),
 
-        cardColor: const Color(0xFF0F172A),
+        cardColor: const Color(0xFF111827),
+        dividerColor: Color(0xFF1F2937),
 
-        dividerColor: Colors.white10,
-
-        iconTheme: const IconThemeData(color: Color(0xFF38BDF8)),
+        iconTheme: const IconThemeData(color: Color(0xFF60A5FA)),
 
         textTheme: const TextTheme(
           headlineLarge: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+            color: Color(0xFFF8FAFC),
+            fontWeight: FontWeight.w800,
           ),
           headlineMedium: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+            color: Color(0xFFF8FAFC),
+            fontWeight: FontWeight.w700,
           ),
-          bodyLarge: TextStyle(color: Colors.white70, height: 1.5),
-          bodyMedium: TextStyle(color: Colors.white70, height: 1.5),
+          bodyLarge: TextStyle(color: Color(0xFFCBD5E1), height: 1.5),
+          bodyMedium: TextStyle(color: Color(0xFFCBD5E1), height: 1.5),
         ),
 
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFF0F172A),
-
-          hintStyle: const TextStyle(color: Colors.white38),
-
-          labelStyle: const TextStyle(color: Colors.white70),
-
+          fillColor: const Color(0xFF111827),
+          hintStyle: const TextStyle(color: Color(0xFF64748B)),
+          labelStyle: const TextStyle(color: Color(0xFFCBD5E1)),
+          prefixIconColor: const Color(0xFF94A3B8),
+          suffixIconColor: const Color(0xFF94A3B8),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             borderSide: BorderSide.none,
           ),
-
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: Color(0xFF1F2937)),
           ),
-
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFF38BDF8), width: 1.5),
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: Color(0xFF60A5FA), width: 1.4),
           ),
         ),
 
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF38BDF8),
-            foregroundColor: Colors.black,
+            backgroundColor: const Color(0xFF60A5FA),
+            foregroundColor: const Color(0xFF020617),
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(18),
             ),
             textStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w800,
               fontSize: 16,
             ),
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
@@ -117,8 +114,8 @@ class ResearchAIAssistantApp extends StatelessWidget {
         ),
 
         snackBarTheme: SnackBarThemeData(
-          backgroundColor: const Color(0xFF0F172A),
-          contentTextStyle: const TextStyle(color: Colors.white),
+          backgroundColor: const Color(0xFF111827),
+          contentTextStyle: const TextStyle(color: Color(0xFFF8FAFC)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -126,14 +123,14 @@ class ResearchAIAssistantApp extends StatelessWidget {
         ),
 
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Color(0xFF38BDF8),
-          foregroundColor: Colors.black,
+          backgroundColor: Color(0xFF60A5FA),
+          foregroundColor: Color(0xFF020617),
         ),
 
         switchTheme: SwitchThemeData(
-          thumbColor: MaterialStateProperty.all(const Color(0xFF38BDF8)),
+          thumbColor: MaterialStateProperty.all(const Color(0xFF60A5FA)),
           trackColor: MaterialStateProperty.all(
-            const Color(0xFF38BDF8).withOpacity(0.4),
+            const Color(0xFF60A5FA).withOpacity(0.35),
           ),
         ),
       ),
