@@ -10,11 +10,12 @@ import 'research_profile_service.dart';
 import 'saved_post_service.dart';
 import 'share_service.dart';
 import 'summary_service.dart';
+import 'session_service.dart';
 
 class AppSyncService {
   static Future<void> initializeApp() async {
     await AuthService.isLoggedIn();
-
+    await SessionService.loadSession();
     await NotificationService.loadNotifications();
     await ConnectionService.loadConnections();
     await ResearchMessagingService.loadMessages();
