@@ -4,6 +4,7 @@ import '../models/comment_model.dart';
 import 'local_storage_service.dart';
 import 'notification_service.dart';
 import 'post_service.dart';
+import 'session_service.dart';
 
 class CommentService {
   static final List<CommentModel> comments = [];
@@ -83,6 +84,7 @@ class CommentService {
       CommentModel(
         commentId: now.microsecondsSinceEpoch.toString(),
         postId: postId,
+        commenterId: SessionService.currentUser?.userId ?? "local_user",
         commenter: commenter,
         comment: comment,
         createdAt: now,
@@ -115,6 +117,7 @@ class CommentService {
       CommentModel(
         commentId: now.microsecondsSinceEpoch.toString(),
         postId: postId,
+        commenterId: SessionService.currentUser?.userId ?? "local_user",
         commenter: commenter,
         comment: reply,
         createdAt: now,

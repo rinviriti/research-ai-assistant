@@ -1,6 +1,7 @@
 class CommentModel {
   final String commentId;
   final String postId;
+  final String commenterId;
   final String commenter;
   final String comment;
   final DateTime createdAt;
@@ -9,6 +10,7 @@ class CommentModel {
   CommentModel({
     required this.commentId,
     required this.postId,
+    required this.commenterId,
     required this.commenter,
     required this.comment,
     required this.createdAt,
@@ -30,6 +32,7 @@ class CommentModel {
     return {
       "commentId": commentId,
       "postId": postId,
+      "commenterId": commenterId,
       "commenter": commenter,
       "comment": comment,
       "createdAt": createdAt.toIso8601String(),
@@ -41,6 +44,7 @@ class CommentModel {
     return CommentModel(
       commentId: json["commentId"] ?? "",
       postId: json["postId"] ?? "",
+      commenterId: json["commenterId"] ?? "",
       commenter: json["commenter"] ?? "",
       comment: json["comment"] ?? "",
       createdAt: DateTime.tryParse(json["createdAt"] ?? "") ?? DateTime.now(),
