@@ -4,6 +4,7 @@ import '../models/post_model.dart';
 import '../models/saved_post_model.dart';
 import 'local_storage_service.dart';
 import 'notification_service.dart';
+import 'session_service.dart';
 
 class SavedPostService {
   static final List<SavedPostModel> savedPosts = [];
@@ -20,7 +21,7 @@ class SavedPostService {
 
   static void sync() {
     if (!_controller.isClosed) {
-      _controller.add(List<SavedPostModel>.from(savedPosts));
+      _controller.add(List<SavedPostModel>.from(getSavedPosts()));
     }
 
     saveSavedPosts();
@@ -29,17 +30,18 @@ class SavedPostService {
   static Future<void> loadSavedPosts() async {
     final data = await LocalStorageService.getJson(storageKey);
 
-    if (data == null) return;
-
     savedPosts.clear();
 
-    savedPosts.addAll(
-      (data as List)
-          .map(
-            (item) => SavedPostModel.fromJson(Map<String, dynamic>.from(item)),
-          )
-          .toList(),
-    );
+    if (data != null) {
+      savedPosts.addAll(
+        (data as List)
+            .map(
+              (item) =>
+                  SavedPostModel.fromJson(Map<String, dynamic>.from(item)),
+            )
+            .toList(),
+      );
+    }
 
     savedPosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
@@ -53,14 +55,27 @@ class SavedPostService {
     );
   }
 
+  static String get currentUserId {
+    return SessionService.currentUser?.userId ?? "local_user";
+  }
+
   static bool isSaved(String postId) {
-    return savedPosts.any((savedPost) => savedPost.postId == postId);
+    return savedPosts.any(
+      (savedPost) =>
+          savedPost.postId == postId && savedPost.savedById == currentUserId,
+    );
   }
 
   static List<SavedPostModel> getSavedPosts() {
-    savedPosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final filtered = savedPosts.where(
+      (savedPost) => savedPost.savedById == currentUserId,
+    );
 
-    return List<SavedPostModel>.from(savedPosts);
+    final result = filtered.toList();
+
+    result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    return result;
   }
 
   static void savePost({required PostModel post, required String savedBy}) {
@@ -74,6 +89,7 @@ class SavedPostService {
         postAuthor: post.author,
         postContent: post.content,
         savedBy: savedBy,
+        savedById: currentUserId,
         createdAt: DateTime.now(),
       ),
     );
@@ -91,7 +107,10 @@ class SavedPostService {
   }
 
   static void unsavePost(String postId) {
-    savedPosts.removeWhere((savedPost) => savedPost.postId == postId);
+    savedPosts.removeWhere(
+      (savedPost) =>
+          savedPost.postId == postId && savedPost.savedById == currentUserId,
+    );
 
     sync();
   }
@@ -106,6 +125,7 @@ class SavedPostService {
 
   static void clearSavedPosts() {
     savedPosts.clear();
+
     sync();
   }
 }

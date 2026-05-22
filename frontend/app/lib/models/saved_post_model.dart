@@ -1,16 +1,17 @@
 class SavedPostModel {
   final String savedId;
-
   final String postId;
 
   final String postAuthor;
   final String postContent;
 
   final String savedBy;
+  final String savedById;
 
   final DateTime createdAt;
 
   SavedPostModel({
+    required this.savedById,
     required this.savedId,
     required this.postId,
     required this.postAuthor,
@@ -32,6 +33,7 @@ class SavedPostModel {
 
   Map<String, dynamic> toJson() {
     return {
+      "savedById": savedById,
       "savedId": savedId,
       "postId": postId,
       "postAuthor": postAuthor,
@@ -43,6 +45,7 @@ class SavedPostModel {
 
   factory SavedPostModel.fromJson(Map<String, dynamic> json) {
     return SavedPostModel(
+      savedById: json["savedById"] ?? "",
       savedId: json["savedId"] ?? "",
       postId: json["postId"] ?? "",
       postAuthor: json["postAuthor"] ?? "",

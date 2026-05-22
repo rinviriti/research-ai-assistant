@@ -26,6 +26,7 @@ class SavedPostBackendRepository {
         "postAuthor": post.author,
         "postContent": post.content,
         "savedBy": savedBy,
+        "savedById": SavedPostService.currentUserId,
         "createdAt": DateTime.now().toIso8601String(),
       },
     );
