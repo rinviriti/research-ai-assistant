@@ -1,6 +1,7 @@
 import '../../models/research_message_model.dart';
 import '../../models/research_thread_model.dart';
 import '../../services/research_messaging_service.dart';
+import '../../services/session_service.dart';
 import '../../services/time_formatter_service.dart';
 import '../mock_backend/mock_database.dart';
 
@@ -23,11 +24,13 @@ class MessagingBackendRepository {
     );
 
     final now = DateTime.now();
+    final threadId = ResearchMessagingService.threadId(researcherName);
 
     await MockDatabase.addDocument(
       collection: "chatThreads",
       data: {
-        "threadId": ResearchMessagingService.threadId(researcherName),
+        "threadId": threadId,
+        "participantId": threadId,
         "researcherName": researcherName,
         "university": university,
         "lastMessage": "Start a research conversation.",
@@ -44,6 +47,7 @@ class MessagingBackendRepository {
     bool isMe = true,
   }) async {
     final now = DateTime.now();
+    final threadId = ResearchMessagingService.threadId(researcherName);
 
     ResearchMessagingService.sendMessage(
       researcherName: researcherName,
@@ -56,9 +60,12 @@ class MessagingBackendRepository {
       collection: "messages",
       data: {
         "messageId": now.microsecondsSinceEpoch.toString(),
-        "threadId": ResearchMessagingService.threadId(researcherName),
+        "threadId": threadId,
         "researcherName": researcherName,
         "university": university,
+        "senderId": isMe
+            ? SessionService.currentUser?.userId ?? "local_user"
+            : threadId,
         "senderName": isMe ? "You" : researcherName,
         "message": message,
         "createdAt": now.toIso8601String(),
@@ -76,19 +83,13 @@ class MessagingBackendRepository {
   }
 
   Map<String, dynamic> threadToPayload(ResearchThreadModel thread) {
-    return {
-      "threadId": thread.threadId,
-      "researcherName": thread.researcherName,
-      "university": thread.university,
-      "lastMessage": thread.lastMessage,
-      "updatedAt": thread.updatedAt.toIso8601String(),
-      "unreadCount": thread.unreadCount,
-    };
+    return thread.toJson();
   }
 
   ResearchThreadModel threadFromPayload(Map<String, dynamic> data) {
     return ResearchThreadModel(
       threadId: data["threadId"] ?? "",
+      participantId: data["participantId"] ?? "",
       researcherName: data["researcherName"] ?? "",
       university: data["university"] ?? "",
       lastMessage: data["lastMessage"] ?? "",
@@ -98,18 +99,13 @@ class MessagingBackendRepository {
   }
 
   Map<String, dynamic> messageToPayload(ResearchMessageModel message) {
-    return {
-      "messageId": message.messageId,
-      "senderName": message.senderName,
-      "message": message.message,
-      "createdAt": message.createdAt.toIso8601String(),
-      "isMe": message.isMe,
-    };
+    return message.toJson();
   }
 
   ResearchMessageModel messageFromPayload(Map<String, dynamic> data) {
     return ResearchMessageModel(
       messageId: data["messageId"] ?? "",
+      senderId: data["senderId"] ?? "",
       senderName: data["senderName"] ?? "",
       message: data["message"] ?? "",
       createdAt: TimeFormatterService.parse(data["createdAt"]),

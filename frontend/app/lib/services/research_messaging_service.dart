@@ -85,6 +85,7 @@ class ResearchMessagingService {
         0,
         ResearchThreadModel(
           threadId: id,
+          participantId: id,
           researcherName: researcherName,
           university: university,
           lastMessage: "Start a research conversation.",
@@ -159,6 +160,7 @@ class ResearchMessagingService {
 
     final newMessage = ResearchMessageModel(
       messageId: now.microsecondsSinceEpoch.toString(),
+      senderId: isMe ? "local_user" : id,
       senderName: isMe ? "You" : researcherName,
       message: message,
       createdAt: now,
@@ -176,6 +178,7 @@ class ResearchMessagingService {
 
       final updatedThread = ResearchThreadModel(
         threadId: oldThread.threadId,
+        participantId: oldThread.participantId,
         researcherName: oldThread.researcherName,
         university: oldThread.university,
         lastMessage: message,
@@ -219,6 +222,7 @@ class ResearchMessagingService {
 
     threads[threadIndex] = ResearchThreadModel(
       threadId: oldThread.threadId,
+      participantId: oldThread.participantId,
       researcherName: oldThread.researcherName,
       university: oldThread.university,
       lastMessage: oldThread.lastMessage,
