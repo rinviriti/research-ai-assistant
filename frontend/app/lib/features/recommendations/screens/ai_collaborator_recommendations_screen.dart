@@ -7,6 +7,8 @@ import '../../../services/researcher_service.dart';
 import '../../messaging/screens/research_chat_detail_screen.dart';
 import '../../research_profile/screens/research_profile_screen.dart';
 import '../../researchers/screens/researcher_profile_preview_screen.dart';
+import '../../../services/ai_recommendation_service.dart';
+import '../../../services/researcher_service.dart';
 
 class AiCollaboratorRecommendationsScreen extends StatefulWidget {
   const AiCollaboratorRecommendationsScreen({super.key});
@@ -39,7 +41,10 @@ class _AiCollaboratorRecommendationsScreenState
       profile = loadedProfile;
       recommendations = loadedProfile == null
           ? []
-          : ResearcherService.recommendCollaborators(loadedProfile);
+          : AiRecommendationService.generateRecommendations(
+              profile: loadedProfile,
+              researchers: ResearcherService.researchers,
+            );
       isLoading = false;
     });
   }
