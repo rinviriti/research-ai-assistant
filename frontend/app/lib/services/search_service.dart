@@ -4,43 +4,75 @@ import 'post_service.dart';
 import 'researcher_service.dart';
 
 class SearchService {
+  static String normalize(String value) {
+    return value.trim().toLowerCase();
+  }
+
+  static bool containsKeyword(String value, String keyword) {
+    return normalize(value).contains(keyword);
+  }
+
   static List<PostModel> searchPosts(String query) {
-    final keyword = query.trim().toLowerCase();
+    final keyword = normalize(query);
 
     if (keyword.isEmpty) return [];
 
-    return PostService.posts.where((post) {
-      final contentMatch = post.content.toLowerCase().contains(keyword);
-      final authorMatch = post.author.toLowerCase().contains(keyword);
-      final universityMatch = post.university.toLowerCase().contains(keyword);
-      final typeMatch = post.type.toLowerCase().contains(keyword);
-      final tagMatch = post.tags.any(
-        (tag) => tag.toLowerCase().contains(keyword),
+    final results = PostService.getPosts().where((post) {
+      final contentMatch = containsKeyword(post.content, keyword);
+      final authorMatch = containsKeyword(post.author, keyword);
+      final universityMatch = containsKeyword(post.university, keyword);
+      final typeMatch = containsKeyword(post.type, keyword);
+
+      final tagMatch = post.tags.any((tag) => containsKeyword(tag, keyword));
+
+      final mediaMatch = post.media.any(
+        (media) => containsKeyword(media.fileName, keyword),
       );
 
       return contentMatch ||
           authorMatch ||
           universityMatch ||
           typeMatch ||
-          tagMatch;
+          tagMatch ||
+          mediaMatch;
     }).toList();
+
+    results.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+    return results;
   }
 
   static List<ResearcherModel> searchResearchers(String query) {
-    final keyword = query.trim().toLowerCase();
+    final keyword = normalize(query);
 
     if (keyword.isEmpty) return [];
 
     return ResearcherService.researchers.where((researcher) {
-      final nameMatch = researcher.name.toLowerCase().contains(keyword);
-      final universityMatch = researcher.university.toLowerCase().contains(
-        keyword,
-      );
+      final nameMatch = containsKeyword(researcher.name, keyword);
+      final universityMatch = containsKeyword(researcher.university, keyword);
+      final departmentMatch = containsKeyword(researcher.department, keyword);
+      final bioMatch = containsKeyword(researcher.bio, keyword);
+      final lookingForMatch = containsKeyword(researcher.lookingFor, keyword);
+
       final interestMatch = researcher.interests.any(
-        (interest) => interest.toLowerCase().contains(keyword),
+        (interest) => containsKeyword(interest, keyword),
       );
 
-      return nameMatch || universityMatch || interestMatch;
+      final skillMatch = researcher.skills.any(
+        (skill) => containsKeyword(skill, keyword),
+      );
+
+      return nameMatch ||
+          universityMatch ||
+          departmentMatch ||
+          bioMatch ||
+          lookingForMatch ||
+          interestMatch ||
+          skillMatch;
     }).toList();
+  }
+
+  static bool hasResults(String query) {
+    return searchPosts(query).isNotEmpty || searchResearchers(query).isNotEmpty;
   }
 }
