@@ -14,6 +14,7 @@ import '../../notes/screens/research_notes_screen.dart';
 import '../../chat/screens/ai_chat_screen.dart';
 import '../../feed/screens/saved_posts_screen.dart';
 import '../../connections/screens/connections_screen.dart';
+import '../../recommendations/screens/ai_collaborator_recommendations_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -493,6 +494,14 @@ class HomeScreen extends StatelessWidget {
                   subtitle: "Track datasets and models.",
                   color: Colors.greenAccent,
                   screen: const ExperimentTrackerScreen(),
+                ),
+                toolCard(
+                  context: context,
+                  icon: Icons.auto_awesome_mosaic_outlined,
+                  title: "AI Collaborators",
+                  subtitle: "Find smart research matches.",
+                  color: Colors.cyanAccent,
+                  screen: const AiCollaboratorRecommendationsScreen(),
                 ),
                 toolCard(
                   context: context,
