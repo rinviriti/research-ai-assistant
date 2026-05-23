@@ -3,11 +3,20 @@ import 'package:flutter/foundation.dart';
 import '../models/research_profile_model.dart';
 import 'auth_service.dart';
 import 'local_storage_service.dart';
+import 'session_service.dart';
 
 class ResearchProfileService {
   static ResearchProfileModel? currentProfile;
 
-  static const String storageKey = "rh_research_profile";
+  static String get currentUserId {
+    return SessionService.currentUser?.userId ??
+        AuthService.currentUserEmail ??
+        "local_user";
+  }
+
+  static String get storageKey {
+    return "rh_research_profile_$currentUserId";
+  }
 
   static Future<void> loadProfile() async {
     try {
@@ -18,9 +27,16 @@ class ResearchProfileService {
         return;
       }
 
-      currentProfile = ResearchProfileModel.fromJson(
+      final loadedProfile = ResearchProfileModel.fromJson(
         Map<String, dynamic>.from(data),
       );
+
+      if (loadedProfile.userId != currentUserId) {
+        currentProfile = null;
+        return;
+      }
+
+      currentProfile = loadedProfile;
     } catch (e) {
       debugPrint("Failed to load research profile: $e");
       currentProfile = null;
@@ -32,9 +48,15 @@ class ResearchProfileService {
     final now = DateTime.now();
 
     final profile = ResearchProfileModel(
-      userId: AuthService.currentUserEmail ?? "local_user",
-      name: AuthService.currentUser ?? "Researcher",
-      email: AuthService.currentUserEmail ?? "researcher@email.com",
+      userId: currentUserId,
+      name:
+          SessionService.currentUser?.name ??
+          AuthService.currentUser ??
+          "Researcher",
+      email:
+          SessionService.currentUser?.email ??
+          AuthService.currentUserEmail ??
+          "researcher@email.com",
       university: "",
       department: "",
       bio: "",
@@ -68,7 +90,10 @@ class ResearchProfileService {
   }
 
   static Future<void> saveProfile(ResearchProfileModel profile) async {
-    currentProfile = profile.copyWith(updatedAt: DateTime.now());
+    currentProfile = profile.copyWith(
+      userId: currentUserId,
+      updatedAt: DateTime.now(),
+    );
 
     await LocalStorageService.saveJson(
       key: storageKey,
