@@ -82,25 +82,15 @@ class ResearcherService {
     final otherSkillSet = normalizeList(otherSkills);
 
     final sharedInterests = myInterestSet.intersection(otherInterestSet).length;
-    final totalInterests = myInterestSet.union(otherInterestSet).length;
-
     final sharedSkills = mySkillSet.intersection(otherSkillSet).length;
-    final totalSkills = mySkillSet.union(otherSkillSet).length;
 
-    if (totalInterests == 0 && totalSkills == 0) return 0;
-
-    if (mySkills.isEmpty || otherSkills.isEmpty) {
-      if (totalInterests == 0) return 0;
-      return ((sharedInterests / totalInterests) * 100).round();
-    }
-
-    final interestScore = totalInterests == 0
+    final interestScore = otherInterestSet.isEmpty
         ? 0
-        : ((sharedInterests / totalInterests) * 70).round();
+        : ((sharedInterests / otherInterestSet.length) * 70).round();
 
-    final skillScore = totalSkills == 0
+    final skillScore = otherSkillSet.isEmpty
         ? 0
-        : ((sharedSkills / totalSkills) * 30).round();
+        : ((sharedSkills / otherSkillSet.length) * 30).round();
 
     return interestScore + skillScore;
   }
