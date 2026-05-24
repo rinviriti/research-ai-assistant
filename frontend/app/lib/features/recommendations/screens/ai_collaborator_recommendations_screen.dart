@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../models/collaborator_recommendation_model.dart';
 import '../../../models/research_profile_model.dart';
+
+import '../../../services/ai_recommendation_service.dart';
 import '../../../services/research_profile_service.dart';
 import '../../../services/researcher_service.dart';
+
 import '../../messaging/screens/research_chat_detail_screen.dart';
 import '../../research_profile/screens/research_profile_screen.dart';
 import '../../researchers/screens/researcher_profile_preview_screen.dart';
-import '../../../services/ai_recommendation_service.dart';
-import '../../../services/researcher_service.dart';
 
 class AiCollaboratorRecommendationsScreen extends StatefulWidget {
   const AiCollaboratorRecommendationsScreen({super.key});

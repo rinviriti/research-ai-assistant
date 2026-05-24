@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/chat_message_model.dart';
 import '../../../services/chat_service.dart';
-import '../../../services/gemini_service.dart';
+import '../../../services/remote_ai_service.dart';
 
 class AIChatScreen extends StatefulWidget {
   const AIChatScreen({super.key});
@@ -37,10 +37,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
       messageController.clear();
     });
 
-    final response = await GeminiService.generateSummary(
-      title: "Research Chat Question",
-      abstract: userMessage,
-    );
+    final response = await RemoteAiService.askResearchAI(userMessage);
 
     if (!mounted) return;
 
