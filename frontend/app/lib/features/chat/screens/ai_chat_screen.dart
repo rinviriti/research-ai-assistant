@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../models/chat_message_model.dart';
 import '../../../services/chat_service.dart';
-import '../../../services/remote_ai_service.dart';
+import '../../../services/gemini_service.dart';
 
 class AIChatScreen extends StatefulWidget {
   const AIChatScreen({super.key});
@@ -13,7 +13,20 @@ class AIChatScreen extends StatefulWidget {
 
 class _AIChatScreenState extends State<AIChatScreen> {
   final messageController = TextEditingController();
+
   bool isLoading = false;
+
+  String selectedMode = "Research Ideas";
+
+  final List<String> aiModes = const [
+    "Research Ideas",
+    "Literature Review",
+    "Methodology",
+    "Paper Summary",
+    "Citation Help",
+    "Experiment Design",
+    "Thesis Guidance",
+  ];
 
   final List<String> quickPrompts = const [
     "Suggest thesis ideas in AI healthcare",
@@ -29,7 +42,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     if (userMessage.isEmpty) return;
 
     await ChatService.addMessage(
-      ChatMessageModel(message: userMessage, isUser: true),
+      ChatMessageModel(message: "[$selectedMode] $userMessage", isUser: true),
     );
 
     setState(() {
@@ -37,7 +50,10 @@ class _AIChatScreenState extends State<AIChatScreen> {
       messageController.clear();
     });
 
-    final response = await RemoteAiService.askResearchAI(userMessage);
+    final response = await GeminiService.generateResearchResponse(
+      mode: selectedMode,
+      userInput: userMessage,
+    );
 
     if (!mounted) return;
 
@@ -52,7 +68,37 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
   Future<void> clearChat() async {
     await ChatService.clearChat();
+
+    if (!mounted) return;
+
     setState(() {});
+  }
+
+  Widget modeChip(String mode) {
+    final selected = selectedMode == mode;
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ChoiceChip(
+        label: Text(mode),
+        selected: selected,
+        selectedColor: primary,
+        backgroundColor: Theme.of(context).cardColor,
+        side: BorderSide(color: selected ? primary : Colors.white10),
+        labelStyle: TextStyle(
+          color: selected ? Colors.black : Colors.white70,
+          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+        ),
+        onSelected: isLoading
+            ? null
+            : (_) {
+                setState(() {
+                  selectedMode = mode;
+                });
+              },
+      ),
+    );
   }
 
   Widget quickPromptChip(String text) {
@@ -76,7 +122,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(14),
-        constraints: const BoxConstraints(maxWidth: 320),
+        constraints: const BoxConstraints(maxWidth: 330),
         decoration: BoxDecoration(
           color: message.isUser ? primary : Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(18),
@@ -94,9 +140,43 @@ class _AIChatScreenState extends State<AIChatScreen> {
     );
   }
 
+  Widget loadingBubble() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 18,
+              width: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              "RH+ is thinking...",
+              style: TextStyle(color: Colors.white70),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     messageController.dispose();
+
     super.dispose();
   }
 
@@ -118,6 +198,14 @@ class _AIChatScreenState extends State<AIChatScreen> {
       body: Column(
         children: [
           Container(
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: aiModes.map(modeChip).toList(),
+            ),
+          ),
+          Container(
             height: 56,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             child: ListView(
@@ -131,15 +219,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
               itemCount: messages.length + (isLoading ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index == messages.length && isLoading) {
-                  return Align(
-                    alignment: Alignment.centerLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  );
+                  return loadingBubble();
                 }
 
                 return messageBubble(messages[index]);
@@ -160,8 +240,8 @@ class _AIChatScreenState extends State<AIChatScreen> {
                     minLines: 1,
                     maxLines: 4,
                     style: const TextStyle(color: Colors.white),
-                    decoration: const InputDecoration(
-                      hintText: "Ask a research question...",
+                    decoration: InputDecoration(
+                      hintText: "Ask in $selectedMode mode...",
                     ),
                   ),
                 ),
