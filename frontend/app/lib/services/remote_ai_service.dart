@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 
 class RemoteAiService {
@@ -8,11 +9,17 @@ class RemoteAiService {
     try {
       final response = await http.post(
         Uri.parse(endpointUrl),
+
         headers: {"Content-Type": "application/json"},
+
         body: jsonEncode({
           "message": message,
+
           "systemPrompt":
-              "You are RH+, an academic research assistant. Help only with research, papers, methodology, datasets, citations, experiments, and academic writing.",
+              "You are RH+, an academic AI research assistant. "
+              "Help only with research-related tasks including "
+              "literature reviews, methodology, datasets, experiments, "
+              "academic writing, citations, publications, and research ideas.",
         }),
       );
 
@@ -25,9 +32,9 @@ class RemoteAiService {
       return data["reply"] ??
           data["response"] ??
           data["message"] ??
-          "No AI response found.";
+          "No AI response received.";
     } catch (e) {
-      return "Failed to connect to AI service. Please check your Vercel endpoint.";
+      return "Failed to connect to AI service.";
     }
   }
 }
