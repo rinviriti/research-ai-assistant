@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../models/chat_message_model.dart';
 import '../../../services/chat_service.dart';
 import '../../../services/gemini_service.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class AIChatScreen extends StatefulWidget {
   const AIChatScreen({super.key});
@@ -128,12 +129,33 @@ class _AIChatScreenState extends State<AIChatScreen> {
           borderRadius: BorderRadius.circular(18),
           border: message.isUser ? null : Border.all(color: Colors.white10),
         ),
-        child: Text(
-          message.message,
-          style: TextStyle(
-            color: message.isUser ? Colors.black : Colors.white,
-            height: 1.5,
-            fontWeight: message.isUser ? FontWeight.w600 : FontWeight.normal,
+        child: MarkdownBody(
+          data: message.message,
+          styleSheet: MarkdownStyleSheet(
+            p: TextStyle(
+              color: message.isUser ? Colors.black : Colors.white,
+              height: 1.5,
+              fontSize: 14,
+            ),
+
+            strong: TextStyle(
+              color: message.isUser ? Colors.black : Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+
+            h1: TextStyle(
+              color: message.isUser ? Colors.black : Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+
+            h2: TextStyle(
+              color: message.isUser ? Colors.black : Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+
+            code: TextStyle(color: Colors.greenAccent, fontFamily: 'monospace'),
           ),
         ),
       ),
